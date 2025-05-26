@@ -17,3 +17,7 @@
 !package-lock.json
 !tsconfig.json
 !.gitignore
+!app.json
+!expo-env.d.ts
+!README.md
+node_modules/
