@@ -1,0 +1,19 @@
+# Ignore everything by default
+*
+
+# But don't ignore directories and their contents
+!*/
+!app/**
+!api/**
+!services/**
+!styles/**
+!hooks/**
+!config/**
+!components/**
+!constants/**
+
+# Allow config files
+!package.json
+!package-lock.json
+!tsconfig.json
+!.gitignore
