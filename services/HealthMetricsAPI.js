@@ -33,6 +33,43 @@ class HealthMetricsAPI {
       console.error('Error clearing token:', error);
     }
   }
+// ✨ FIXED: AsyncStorage helpers for timeline persistence
+async getTimelineDismissTime() {
+  try {
+    const dismissTime = await SecureStore.getItemAsync('timeline_dismiss_time');
+    const parsedTime = dismissTime ? parseInt(dismissTime) : 0;
+    
+    // Validate the timestamp
+    if (isNaN(parsedTime) || parsedTime < 0) {
+      console.warn('Invalid dismiss time found, resetting to 0');
+      return 0;
+    }
+    
+    return parsedTime;
+  } catch (error) {
+    console.error('Error getting timeline dismiss time:', error);
+    return 0;
+  }
+}
+
+
+async setTimelineDismissTime() {
+  try {
+    const now = Date.now();
+    
+    // Validate timestamp before storing
+    if (isNaN(now) || now <= 0) {
+      throw new Error('Invalid timestamp generated');
+    }
+    
+    await SecureStore.setItemAsync('timeline_dismiss_time', now.toString());
+    console.log('✅ Timeline dismiss time saved:', new Date(now).toISOString());
+    return true;
+  } catch (error) {
+    console.error('Error setting timeline dismiss time:', error);
+    return false;
+  }
+}
 
   getHeaders() {
     const headers = {
@@ -124,12 +161,32 @@ class HealthMetricsAPI {
     }
   }
 
-  // ✨ New: Get recent metrics for timeline
+  // ✨ Enhanced: Get recent metrics with dismiss time check
   async getRecentMetrics(days = 7) {
     try {
       const response = await this.get(`/patient/metrics/recent?days=${days}`);
-      console.log('✅ Recent metrics loaded:', response.summary);
-      return response;
+      const dismissTime = await this.getTimelineDismissTime();
+      
+      // Filter timeline items based on dismiss time
+      const filteredTimeline = (response.timeline || []).filter(item => {
+        if (item.type === 'report_extraction') {
+          const itemTime = new Date(item.date).getTime();
+          return itemTime > dismissTime; // Only show if newer than last dismiss
+        }
+        return true; // Keep manual entries
+      });
+
+      console.log('✅ Recent metrics loaded:', {
+        total: response.timeline?.length || 0,
+        filtered: filteredTimeline.length,
+        dismiss_time: new Date(dismissTime).toISOString()
+      });
+      
+      return {
+        ...response,
+        timeline: filteredTimeline,
+        has_new_items: filteredTimeline.length > 0
+      };
     } catch (error) {
       console.error('Get recent metrics failed:', error);
       throw error;
@@ -208,41 +265,68 @@ class HealthMetricsAPI {
     }
   }
 
-  // ✨ New: Helper to process upload response and refresh metrics
+    // ✨ Enhanced: Handle report upload with better metrics integration
+  // ✨ DEBUG: Handle report upload with extensive logging
   async handleReportUploadComplete(uploadResponse) {
     try {
-      console.log('📊 Processing report upload response:', {
-        metrics_extracted: uploadResponse.health_metrics?.total_extracted || 0,
-        categories_found: uploadResponse.health_metrics?.categories_found || [],
-        new_metrics_available: uploadResponse.health_metrics?.new_metrics_available || false
+      console.log('🔍 UPLOAD RESPONSE RECEIVED:', {
+        has_health_metrics: !!uploadResponse.health_metrics,
+        health_metrics_keys: uploadResponse.health_metrics ? Object.keys(uploadResponse.health_metrics) : [],
+        health_metrics_content: uploadResponse.health_metrics,
+        has_extracted_details: !!uploadResponse.extracted_metrics_details,
+        extracted_details_length: uploadResponse.extracted_metrics_details?.length || 0
       });
 
-      // If new metrics were extracted, we can optionally refresh the metrics cache
-      if (uploadResponse.health_metrics?.new_metrics_available) {
-        console.log('🔄 New health metrics detected, consider refreshing health screen');
-        
-        // Return helpful info for the UI
+      if (!uploadResponse.health_metrics) {
+        console.warn('❌ No health_metrics in upload response');
         return {
-          shouldRefreshHealthScreen: true,
-          metricsExtracted: uploadResponse.health_metrics.total_extracted,
-          categoriesFound: uploadResponse.health_metrics.categories_found,
-          extractedMetrics: uploadResponse.extracted_metrics_details || []
+          shouldRefreshHealthScreen: false,
+          metricsExtracted: 0,
+          categoriesFound: [],
+          extractedMetrics: [],
+          summary: null
         };
       }
 
+      const metricsExtracted = uploadResponse.health_metrics.total_extracted || 0;
+      const newMetricsAvailable = uploadResponse.health_metrics.new_metrics_available || false;
+
+      console.log('🔍 METRICS PROCESSING:', {
+        metrics_extracted: metricsExtracted,
+        new_metrics_available: newMetricsAvailable,
+        categories_found: uploadResponse.health_metrics.categories_found,
+        should_refresh: newMetricsAvailable
+      });
+
+      // If new metrics were extracted, we should refresh the health screen
+      if (newMetricsAvailable && metricsExtracted > 0) {
+        console.log('✅ New health metrics detected - health screen should refresh');
+        
+        return {
+          shouldRefreshHealthScreen: true,
+          metricsExtracted: metricsExtracted,
+          categoriesFound: uploadResponse.health_metrics.categories_found || [],
+          extractedMetrics: uploadResponse.extracted_metrics_details || [],
+          summary: uploadResponse.health_metrics.metrics_summary
+        };
+      }
+
+      console.log('❌ No new metrics to process');
       return {
         shouldRefreshHealthScreen: false,
         metricsExtracted: 0,
         categoriesFound: [],
-        extractedMetrics: []
+        extractedMetrics: [],
+        summary: null
       };
     } catch (error) {
-      console.error('Handle report upload complete failed:', error);
+      console.error('❌ Handle report upload complete failed:', error);
       return {
         shouldRefreshHealthScreen: false,
         metricsExtracted: 0,
         categoriesFound: [],
-        extractedMetrics: []
+        extractedMetrics: [],
+        summary: null
       };
     }
   }

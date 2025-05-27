@@ -441,6 +441,9 @@ export default function UploadReportScreen() {
         },
       });
 
+     // ✨ ADD THIS DEBUG LOG RIGHT HERE
+      console.log('🔍 UPLOAD RESPONSE DEBUG:', JSON.stringify(response.data, null, 2));
+
       clearInterval(progressInterval);
       setUploadProgress(1);
       

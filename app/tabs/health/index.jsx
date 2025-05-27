@@ -1,4 +1,5 @@
 // app/tabs/health/index.jsx - Enhanced Health Screen
+import * as SecureStore from 'expo-secure-store';
 import React, { useState, useEffect } from 'react';
 import { 
   View, 
@@ -68,19 +69,19 @@ export default function HealthMetrics() {
   const initializeData = async () => {
     try {
       setIsLoading(true);
-      
+      console.log('🔍 HEALTH SCREEN: Starting to load data');
       // Initialize API (get stored token)
       await healthMetricsAPI.init();
-      
+      console.log('🔍 HEALTH SCREEN: API initialized');
       // Load all health data
       await Promise.all([
         loadMetricsData(),
         loadHealthInsights(),
         loadRecentMetrics()
       ]);
-      
+      console.log('🔍 HEALTH SCREEN: All data loaded');
     } catch (error) {
-      console.error('Failed to initialize health data:', error);
+      console.error('❌ Failed to initialize health data:', error);
       Alert.alert('Error', 'Failed to load health data. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
@@ -131,11 +132,13 @@ export default function HealthMetrics() {
       const response = await healthMetricsAPI.getRecentMetrics(7); // Last 7 days
       setRecentMetrics(response.timeline || []);
       
-      // Auto-show recent updates if there are new report metrics
-      const hasRecentReportMetrics = response.timeline?.some(
-        item => item.type === 'report_extraction'
-      );
-      setShowRecentUpdates(hasRecentReportMetrics);
+      // Only show timeline if there are new items (after last dismiss)
+      setShowRecentUpdates(response.has_new_items || false);
+      
+      console.log('✅ Recent metrics loaded:', {
+        total: response.timeline?.length || 0,
+        showing_timeline: response.has_new_items || false
+      });
       
     } catch (error) {
       console.error('Failed to load recent metrics:', error);
@@ -168,8 +171,8 @@ export default function HealthMetrics() {
     }
   };
 
-  // ✨ New: Mark metrics as reviewed
-  const handleMarkAsReviewed = async (metricIds) => {
+   // ✨ Enhanced: Mark metrics as reviewed with dismiss persistence
+   const handleMarkAsReviewed = async (metricIds) => {
     try {
       await healthMetricsAPI.markMetricsAsReviewed(metricIds);
       
@@ -180,6 +183,23 @@ export default function HealthMetrics() {
     } catch (error) {
       console.error('Failed to mark as reviewed:', error);
       Alert.alert('Error', 'Failed to mark metrics as reviewed');
+    }
+  };
+  
+  // ✨ Enhanced: Dismiss timeline with persistent storage
+  const handleDismissTimeline = async () => {
+    try {
+      // Store dismiss time persistently
+      await healthMetricsAPI.setTimelineDismissTime();
+      
+      // Hide timeline immediately
+      setShowRecentUpdates(false);
+      
+      console.log('✅ Timeline dismissed and stored persistently');
+    } catch (error) {
+      console.error('Failed to dismiss timeline:', error);
+      // Still hide the timeline even if storage fails
+      setShowRecentUpdates(false);
     }
   };
 
@@ -337,8 +357,8 @@ export default function HealthMetrics() {
     setShowRecommendationsModal(true);
   };
 
-  // ✨ New: Render recent updates section
-  const renderRecentUpdates = () => {
+   // ✨ Enhanced: Render recent updates section with proper dismiss handling
+   const renderRecentUpdates = () => {
     if (!showRecentUpdates || recentMetrics.length === 0) return null;
 
     return (
@@ -352,7 +372,7 @@ export default function HealthMetrics() {
           </View>
           <TouchableOpacity 
             style={styles.dismissButton}
-            onPress={() => setShowRecentUpdates(false)}
+            onPress={handleDismissTimeline}
           >
             <Ionicons name="close" size={18} color="#aaa" />
           </TouchableOpacity>
