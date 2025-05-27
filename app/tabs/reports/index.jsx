@@ -162,7 +162,7 @@ export default function Reports() {
         // Fallback: Try again with longer delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        try {
+        try { HELLO
           await Sharing.shareAsync(uri, {
             mimeType: 'application/pdf',
             dialogTitle: `Share ${type === 'summary' ? 'AI Summary' : 'Original'} Report`
