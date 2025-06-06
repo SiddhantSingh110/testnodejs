@@ -1,4 +1,4 @@
-// app/tabs/report/[id].jsx
+// app/tabs/report/[id].jsx - Redesigned Report Detail Screen
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -12,6 +12,7 @@ import {
   Platform,
   RefreshControl,
   Image,
+  Linking,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../../hooks/useAuth';
@@ -20,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { transform } from 'typescript';
 
 const { width } = Dimensions.get('window');
 
@@ -234,6 +236,49 @@ export default function ReportDetail() {
     }
   };
 
+  // Format date and time without seconds
+  const formatDateTime = (dateTimeString) => {
+    try {
+      const date = new Date(dateTimeString);
+      const dateStr = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      const timeStr = date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+      return { dateStr, timeStr };
+    } catch {
+      return { dateStr: dateTimeString, timeStr: '' };
+    }
+  };
+
+  // Handle download original report
+  const handleDownloadReport = () => {
+    Alert.alert(
+      'Download Report',
+      'Choose your preferred format:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'AI Summary Report', onPress: () => downloadToDevice('summary') },
+        { text: 'Original Report', onPress: () => downloadToDevice('original') },
+      ]
+    );
+  };
+
+  const downloadToDevice = async (type) => {
+    try {
+      Alert.alert('Download Started', `${type === 'summary' ? 'AI Summary' : 'Original'} report is being downloaded to your device...`);
+      // Implement actual download logic here
+      // This would integrate with your Laravel backend download endpoints
+    } catch (error) {
+      Alert.alert('Download Failed', 'Unable to download file. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -247,35 +292,42 @@ export default function ReportDetail() {
   if (!report) return null;
 
   const aiSummary = report.ai_summary || {};
+  const reportDate = formatDateTime(report.report_date);
+  const uploadedDate = formatDateTime(report.uploaded_at);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={styles.safeArea}>
       <StatusBar style="light" />
       <LinearGradient
         colors={['#091429', '#0F2248', '#162F65']}
         style={styles.background}
       />
       
-      <LinearGradient
-        colors={['#2C7BE5', '#38BFA7']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backButton}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>{report.title}</Text>
-            <Text style={styles.headerSubtitle}>Medical Report Analysis</Text>
-          </View>
+      {/* Compact Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.push('/tabs/reports')} 
+          style={styles.backButton}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {report.title || 'Medical Report'}
+          </Text>
+          <Text style={styles.headerSubtitle}>Analysis Report</Text>
         </View>
-      </LinearGradient>
+
+        <TouchableOpacity 
+          onPress={handleDownloadReport}
+          style={styles.downloadButton}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="download-outline" size={24} color="#38BFA7" />
+        </TouchableOpacity>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -284,74 +336,91 @@ export default function ReportDetail() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Report Metadata Card */}
-        <View style={styles.metadataCard}>
-          <View style={styles.metaGrid}>
+        {/* Compact Report Metadata */}
+        <View style={styles.compactMetadata}>
+          <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Ionicons name="calendar-outline" size={20} color="#2C7BE5" />
-              <Text style={styles.metaLabel}>Report Date</Text>
-              <Text style={styles.metaValue}>{report.report_date}</Text>
+              <Ionicons name="calendar" size={16} color="#2C7BE5" />
+              <View style={styles.metaTextContainer}>
+                <Text style={styles.metaLabel}>Report Date</Text>
+                <Text style={styles.metaValue}>{reportDate.dateStr}</Text>
+                {reportDate.timeStr && <Text style={styles.metaTime}>{reportDate.timeStr}</Text>}
+              </View>
             </View>
+            
             <View style={styles.metaItem}>
-              <Ionicons name="cloud-upload-outline" size={20} color="#38BFA7" />
-              <Text style={styles.metaLabel}>Uploaded</Text>
-              <Text style={styles.metaValue}>{report.uploaded_at}</Text>
+              <Ionicons name="cloud-upload" size={16} color="#38BFA7" />
+              <View style={styles.metaTextContainer}>
+                <Text style={styles.metaLabel}>Uploaded</Text>
+                <Text style={styles.metaValue}>{uploadedDate.dateStr}</Text>
+                {uploadedDate.timeStr && <Text style={styles.metaTime}>{uploadedDate.timeStr}</Text>}
+              </View>
             </View>
+          </View>
+
+          <View style={[styles.metaRow, { marginTop: 20 }]}>
             <View style={styles.metaItem}>
-              <Ionicons name="person-outline" size={20} color="#FFC107" />
-              <Text style={styles.metaLabel}>Uploaded By</Text>
-              <Text style={styles.metaValue}>{report.uploaded_by}</Text>
+              <Ionicons name="analytics" size={16} color="#38BFA7" />
+              <View style={styles.metaTextContainer}>
+                <Text style={styles.metaLabel}>AI Analysis & Diagnosis</Text>
+                <Text style={styles.metaValue} numberOfLines={2}>
+                  {aiSummary.diagnosis || 'No diagnosis available'}
+                </Text>
+                {aiSummary.confidence_score && (
+                  <View style={styles.confidenceBadgeSmall}>
+                    <Text style={styles.confidenceText}>
+                      Confidence: {aiSummary.confidence_score}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
+            
             {report.doctor_name && (
               <View style={styles.metaItem}>
-                <Ionicons name="medical-outline" size={20} color="#FF5656" />
-                <Text style={styles.metaLabel}>Doctor</Text>
-                <Text style={styles.metaValue}>{report.doctor_name}</Text>
+                <Ionicons name="medical" size={16} color="#FF5656" />
+                <View style={styles.metaTextContainer}>
+                  <Text style={styles.metaLabel}>Doctor</Text>
+                  <Text style={styles.metaValue}>{report.doctor_name}</Text>
+                </View>
               </View>
             )}
           </View>
         </View>
 
-        {/* Patient Information Card */}
-        <View style={styles.patientCard}>
+        {/* Redesigned Patient Information */}
+        <View style={styles.patientInfoCard}>
           <View style={styles.patientHeader}>
-            <Ionicons name="person-circle-outline" size={24} color="#2C7BE5" />
-            <Text style={styles.sectionTitle}>Patient Information</Text>
+            <Ionicons name="person-circle" size={20} color="#2C7BE5" />
+            <Text style={styles.cardTitle}>Patient Information</Text>
           </View>
-          <View style={styles.patientGrid}>
-            <View style={styles.patientInfoItem}>
-              <Text style={styles.patientLabel}>Name</Text>
-              <Text style={styles.patientValue}>{aiSummary.patient_name || 'N/A'}</Text>
-            </View>
-            <View style={styles.patientInfoItem}>
-              <Text style={styles.patientLabel}>Age</Text>
-              <Text style={styles.patientValue}>{aiSummary.patient_age || 'N/A'}</Text>
-            </View>
-            <View style={styles.patientInfoItem}>
-              <Text style={styles.patientLabel}>Gender</Text>
-              <Text style={styles.patientValue}>{aiSummary.patient_gender || 'N/A'}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Diagnosis Card */}
-        <View style={styles.diagnosisCard}>
-          <View style={styles.diagnosisHeader}>
-            <Ionicons name="analytics-outline" size={24} color="#38BFA7" />
-            <Text style={styles.sectionTitle}>Diagnosis</Text>
-          </View>
-          <Text style={styles.diagnosisText}>
-            {aiSummary.diagnosis || 'No diagnosis available'}
-          </Text>
-          <View style={styles.confidenceContainer}>
-            <View style={styles.confidenceInfo}>
-              <Text style={styles.confidenceLabel}>AI Confidence Score</Text>
-              <Text style={styles.confidenceDescription}>Based on AI analysis</Text>
-            </View>
-            <View style={styles.confidenceBadge}>
-              <Text style={styles.confidenceValue}>
-                {aiSummary.confidence_score || 'N/A'}
+          
+          <View style={styles.patientInfoContainer}>
+            <View style={styles.patientInfoRow}>
+              <Text style={styles.patientInfoLabel}>Patient Name</Text>
+              <Text style={styles.patientInfoValue}>
+                {aiSummary.patient_name || 'Not Available'}
               </Text>
+            </View>
+            
+            <View style={styles.patientInfoDivider} />
+            
+            <View style={styles.patientInfoRowDouble}>
+              <View style={styles.patientInfoHalf}>
+                <Text style={styles.patientInfoLabel}>Age</Text>
+                <Text style={styles.patientInfoValue}>
+                  {aiSummary.patient_age || 'N/A'}
+                </Text>
+              </View>
+              
+              <View style={styles.patientInfoDividerVertical} />
+              
+              <View style={styles.patientInfoHalf}>
+                <Text style={styles.patientInfoLabel}>Gender</Text>
+                <Text style={styles.patientInfoValue}>
+                  {aiSummary.patient_gender || 'N/A'}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
@@ -359,9 +428,9 @@ export default function ReportDetail() {
         {/* Key Findings */}
         <View style={styles.findingsSection}>
           <View style={styles.findingsHeader}>
-            <Text style={styles.sectionTitle}>Key Findings</Text>
+            <Text style={styles.cardTitle}>Key Findings</Text>
             <Text style={styles.findingsSubtitle}>
-              Tap on findings for detailed information
+              Tap findings for detailed analysis
             </Text>
           </View>
 
@@ -400,14 +469,14 @@ export default function ReportDetail() {
         {aiSummary.recommendations && aiSummary.recommendations.length > 0 && (
           <View style={styles.recommendationsCard}>
             <View style={styles.recommendationsHeader}>
-              <Ionicons name="checkmark-circle-outline" size={24} color="#28D45C" />
-              <Text style={styles.sectionTitle}>Recommendations</Text>
+              <Ionicons name="checkmark-circle" size={20} color="#28D45C" />
+              <Text style={styles.cardTitle}>AI Recommendations</Text>
             </View>
             <View style={styles.recommendationsList}>
               {aiSummary.recommendations.map((rec, index) => (
                 <View key={index} style={styles.recommendationItem}>
                   <View style={styles.recommendationBullet}>
-                    <Ionicons name="chevron-forward" size={16} color="#28D45C" />
+                    <Text style={styles.recommendationNumber}>{index + 1}</Text>
                   </View>
                   <Text style={styles.recommendationText}>{rec}</Text>
                 </View>
@@ -416,37 +485,10 @@ export default function ReportDetail() {
           </View>
         )}
 
-        {/* Hindi Summary */}
-        {aiSummary.hindi_version && (
-          <View style={styles.hindiCard}>
-            <View style={styles.hindiHeader}>
-              <Ionicons name="language-outline" size={24} color="#FF9800" />
-              <Text style={styles.sectionTitle}>Hindi Summary</Text>
-            </View>
-            <Text style={styles.hindiText}>{aiSummary.hindi_version}</Text>
-          </View>
-        )}
-
-        {/* View Original Report Button */}
-        <LinearGradient
-          colors={['#2C7BE5', '#38BFA7']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.viewOriginalButton}
-        >
-          <TouchableOpacity
-            style={styles.buttonContent}
-            onPress={() => {
-              Alert.alert('View Report', 'Opening original report...');
-            }}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="document-text-outline" size={20} color="#fff" />
-            <Text style={styles.viewOriginalButtonText}>View Original Report</Text>
-          </TouchableOpacity>
-        </LinearGradient>
+        {/* Bottom Padding */}
+        <View style={styles.bottomPadding} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -454,6 +496,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#091429',
+    paddingTop: 50, // Manual status bar padding
   },
   background: {
     position: 'absolute',
@@ -461,9 +504,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-  },
-  container: {
-    flex: 1,
   },
   loader: {
     flex: 1,
@@ -476,88 +516,113 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#a0c0ff',
   },
+
+  // Compact Header
   header: {
-    paddingTop: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 4,
-    shadowColor: '#2C7BE5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(22, 47, 101, 0.95)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(160, 192, 255, 0.1)',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
-  headerTextContainer: {
+  headerCenter: {
     flex: 1,
+    marginHorizontal: 16,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  metadataCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(160, 192, 255, 0.15)',
-  },
-  metaGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  metaItem: {
-    width: '48%',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  metaLabel: {
     fontSize: 12,
     color: '#a0c0ff',
-    marginTop: 8,
+    marginTop: 2,
+  },
+  downloadButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(56, 191, 167, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 30, // Extra padding for bottom nav overlap
+  },
+
+  // Compact Metadata
+  compactMetadata: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(160, 192, 255, 0.1)',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  metaTextContainer: {
+    marginLeft: 8,
+    flex: 1,
+  },
+  metaLabel: {
+    fontSize: 11,
+    color: '#a0c0ff',
+    marginBottom: 2,
   },
   metaValue: {
-    fontSize: 14,
+    textTransform: 'capitalize',
+    fontSize: 13,
     color: '#fff',
     fontWeight: '600',
-    marginTop: 4,
-    textAlign: 'center',
   },
-  patientCard: {
+  metaTime: {
+    fontSize: 11,
+    color: '#a0c0ff',
+    marginTop: 1,
+  },
+  confidenceBadgeSmall: {
+    backgroundColor: 'rgba(44, 123, 229, 0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  confidenceText: {
+    fontSize: 10,
+    color: '#18b30f',
+    fontWeight: '600',
+  },
+
+  // Redesigned Patient Info
+  patientInfoCard: {
     backgroundColor: 'rgba(44, 123, 229, 0.08)',
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 12,
     padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(44, 123, 229, 0.2)',
   },
@@ -566,133 +631,99 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
+  cardTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
-    marginLeft: 8,
+    //marginLeft: 8,
   },
-  patientGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  patientInfoItem: {
+  patientInfoContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
-    padding: 12,
-    width: '31%',
-    alignItems: 'center',
+    padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.05)',
   },
-  patientLabel: {
-    fontSize: 12,
-    color: '#a0c0ff',
-    marginBottom: 4,
-  },
-  patientValue: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  diagnosisCard: {
-    backgroundColor: 'rgba(56, 191, 167, 0.08)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 191, 167, 0.2)',
-  },
-  diagnosisHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  patientInfoRow: {
     marginBottom: 12,
   },
-  diagnosisText: {
-    fontSize: 16,
-    color: '#fff',
-    lineHeight: 24,
-    marginBottom: 16,
-  },
-  confidenceContainer: {
+  patientInfoRowDouble: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
-  confidenceInfo: {
+  patientInfoHalf: {
     flex: 1,
   },
-  confidenceLabel: {
-    fontSize: 15,
+  patientInfoLabel: {
+    fontSize: 12,
+    color: '#a0c0ff',
+    marginBottom: 6,
+    fontWeight: '500',
+  },
+  patientInfoValue: {
+    textTransform: 'capitalize',
+    fontSize: 16,
     color: '#fff',
     fontWeight: '600',
+    lineHeight: 20,
   },
-  confidenceDescription: {
+  patientInfoDivider: {
+    height: 1,
+    backgroundColor: 'rgba(160, 192, 255, 0.1)',
+    marginVertical: 12,
+  },
+  patientInfoDividerVertical: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(160, 192, 255, 0.1)',
+    marginHorizontal: 16,
+  },
+
+  // Findings Section
+  findingsSection: {
+    marginBottom: 16,
+  },
+  findingsHeader: {
+    marginBottom: 12,
+  },
+  findingsSubtitle: {
     fontSize: 12,
     color: '#a0c0ff',
     marginTop: 4,
-  },
-  confidenceBadge: {
-    backgroundColor: '#2C7BE5',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  confidenceValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  findingsSection: {
-    marginBottom: 20,
-  },
-  findingsHeader: {
-    marginBottom: 16,
-  },
-  findingsSubtitle: {
-    fontSize: 14,
-    color: '#a0c0ff',
-    marginTop: 4,
-    marginLeft: 8,
   },
   legendContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(160, 192, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 12,
+    marginHorizontal: 8,
   },
   legendIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
   },
   legendText: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#fff',
+    fontWeight: '500',
   },
+
+  // Finding Cards (keeping existing styles but updating some)
   findingCard: {
     marginBottom: 12,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(160, 192, 255, 0.15)',
+    borderColor: 'rgba(160, 192, 255, 0.1)',
   },
   cardContent: {
     padding: 16,
@@ -703,7 +734,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 4,
+    width: 3,
   },
   findingHeaderContainer: {
     marginLeft: 8,
@@ -719,32 +750,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusIndicator: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     marginRight: 12,
-    marginTop: 3,
+    marginTop: 2,
   },
   findingContentMain: {
     flex: 1,
   },
   findingTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#fff',
     marginBottom: 4,
+    lineHeight: 20,
   },
   valueContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   findingValue: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#fff',
     fontWeight: '700',
   },
   unitText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#a0c0ff',
     marginLeft: 4,
   },
@@ -755,29 +787,29 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '180deg' }],
   },
   referenceContainer: {
-    marginTop: 10,
+    marginTop: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 8,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 6,
+    padding: 8,
   },
   referenceText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#a0c0ff',
   },
   expandedContent: {
-    marginTop: 16,
+    marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(160, 192, 255, 0.15)',
-    paddingTop: 16,
+    borderTopColor: 'rgba(160, 192, 255, 0.1)',
+    paddingTop: 12,
   },
+
+  // Tabs (keeping existing styles)
   tabsContainer: {
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   tabScroll: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   tabScrollContainer: {
     paddingHorizontal: 4,
@@ -786,19 +818,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     marginRight: 8,
   },
   modernTabActive: {
     backgroundColor: '#2C7BE5',
   },
   modernTabText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#a0c0ff',
     fontWeight: '500',
-    marginLeft: 6,
+    marginLeft: 4,
   },
   modernTabTextActive: {
     color: '#fff',
@@ -806,66 +838,66 @@ const styles = StyleSheet.create({
   },
   modernTabContent: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(160, 192, 255, 0.15)',
+    borderRadius: 8,
+    padding: 12,
   },
   detailItem: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   detailIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'lightgrey',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
   detailIcon: {
-    fontSize: 16,
-    color: '#38BFA7',
+    fontSize: 12,
+    color: 'black',
   },
   detailContent: {
     flex: 1,
   },
   detailTitle: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   detailDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#a0c0ff',
-    lineHeight: 22,
+    lineHeight: 16,
   },
   noInfoContainer: {
     alignItems: 'center',
-    padding: 24,
+    padding: 16,
   },
   noInfo: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#a0c0ff',
-    marginTop: 8,
+    marginTop: 4,
     textAlign: 'center',
-    opacity: 0.7,
   },
   loadingContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 12,
   },
   loadingDetailsText: {
-    marginLeft: 10,
+    marginLeft: 8,
     color: '#a0c0ff',
+    fontSize: 12,
   },
+
+  // Recommendations
   recommendationsCard: {
     backgroundColor: 'rgba(40, 212, 92, 0.08)',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
@@ -874,74 +906,81 @@ const styles = StyleSheet.create({
   recommendationsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   recommendationsList: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 8,
+    padding: 12,
   },
   recommendationItem: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 8,
     alignItems: 'flex-start',
   },
   recommendationBullet: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(40, 212, 92, 0.15)',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(40, 212, 92, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
     marginTop: 1,
+  },
+  recommendationNumber: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#28D45C',
   },
   recommendationText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     color: '#fff',
-    lineHeight: 20,
+    lineHeight: 18,
   },
-  hindiCard: {
-    backgroundColor: 'rgba(255, 152, 0, 0.08)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 152, 0, 0.2)',
-  },
-  hindiHeader: {
+
+  // Action Buttons
+  actionButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    gap: 12,
+    marginBottom: 16,
   },
-  hindiText: {
-    fontSize: 14,
-    color: '#fff',
-    lineHeight: 22,
-  },
-  viewOriginalButton: {
-    borderRadius: 16,
+  actionButton: {
+    flex: 1,
+    borderRadius: 12,
     overflow: 'hidden',
-    marginBottom: 32,
-    elevation: 4,
-    shadowColor: '#2C7BE5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
   },
-  buttonContent: {
+  actionButtonGradient: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
-  viewOriginalButtonText: {
+  actionButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginLeft: 8,
   },
- });
+  secondaryButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(56, 191, 167, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 191, 167, 0.3)',
+    borderRadius: 12,
+  },
+  secondaryButtonText: {
+    color: '#38BFA7',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+
+  bottomPadding: {
+    height: 100, // Extra padding since bottom nav should be hidden
+  },
+});

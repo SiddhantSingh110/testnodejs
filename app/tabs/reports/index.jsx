@@ -421,14 +421,6 @@ export default function Reports() {
               <Ionicons name="download-outline" size={16} color="#fff" />
               <Text style={styles.actionText}>Download</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: 'rgba(160, 192, 255, 0.15)' }]}
-              onPress={() => showModal(item)}
-            >
-              <Ionicons name="share-outline" size={16} color="#fff" />
-              <Text style={styles.actionText}>Share</Text>
-            </TouchableOpacity>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -661,16 +653,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, 
     borderTopColor: 'rgba(160, 192, 255, 0.1)', 
     paddingTop: 12,
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    gap: 12, // Added gap between buttons
   },
   actionButton: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    paddingHorizontal: 14, 
-    paddingVertical: 8, 
+    paddingHorizontal: 16, // Increased padding for better touch target
+    paddingVertical: 10,   // Increased padding for better touch target
     borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 4,
+    flex: 1, // Each button takes equal space
     justifyContent: 'center'
   },
   actionText: { 

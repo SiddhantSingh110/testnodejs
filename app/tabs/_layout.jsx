@@ -144,22 +144,24 @@ export default function TabsLayout() {
         headerTintColor: '#fff',
       }}
     />
+
     <Tabs.Screen
-      name="health/testmetrics"
+      name="reports/index"
       options={{
-        title: "Test Metrics",
+        title: "Health Reports",
         tabBarIcon: ({ color, size, focused }) => (
           <TabIcon
-            name={focused ? "pulse" : "pulse-outline"}
+            name={focused ? "document-text" : "document-text-outline"}
             color={color}
             focused={focused}
           />
         ),
-        headerStyle: { backgroundColor: '#121212' },
+        headerStyle: { backgroundColor: '#091429' },
         headerTintColor: '#fff',
+        headerTitleStyle: { fontSize: 18, fontWeight: '600' }
       }}
     />
-     
+
     <Tabs.Screen
     name="profile/index"
     options={{
@@ -176,22 +178,6 @@ export default function TabsLayout() {
       headerTitleStyle: { fontSize: 18, fontWeight: '600' }
     }}
   />
-      <Tabs.Screen
-      name="reports/index"
-      options={{
-        title: "Health Reports",
-        tabBarIcon: ({ color, size, focused }) => (
-          <TabIcon
-            name={focused ? "document-text" : "document-text-outline"}
-            color={color}
-            focused={focused}
-          />
-        ),
-        headerStyle: { backgroundColor: '#091429' },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontSize: 18, fontWeight: '600' }
-      }}
-    />
       
       {/* Hidden screens */}
       <Tabs.Screen name="profile/edit" options={{ href: null }} />
