@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "WebsharkHealth",
+    "name": "Webshark My Health",
     "slug": "WebsharkHealth",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,6 +8,10 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "updates": {
+      "url": "https://u.expo.dev/7e7aa94d-6aed-4e1d-aa6c-536294324239"
+    },
+    "runtimeVersion": "1.0.0",
     "ios": {
       "supportsTablet": true
     },
@@ -15,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.siddhantsingh110.WebsharkMyHealth"
     },
     "web": {
       "bundler": "metro",
@@ -41,6 +46,12 @@
           "sounds": [
             "./assets/sounds/notification-sound.wav"
           ]
+        }
+      ],
+      [
+        "expo-system-ui",
+        {
+          "edgeToEdge": true
         }
       ],
       "expo-secure-store",
