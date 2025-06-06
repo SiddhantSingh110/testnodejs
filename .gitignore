@@ -1,6 +1,5 @@
 # Ignore everything by default
 *
-
 # But don't ignore directories and their contents
 !*/
 !app/**
@@ -12,13 +11,8 @@
 !components/**
 !constants/**
 
-# Allow asset files (like app icons, splash screens, sounds)
-!assets/
-!assets/images/
-!assets/images/icon.png
-!assets/images/splash-icon.png
-!assets/sounds/
-!assets/sounds/notification-sound.wav
+# Allow ALL asset files (much simpler approach)
+!assets/**
 
 # Allow config and essential project files
 !package.json
@@ -28,9 +22,9 @@
 !app.json
 !expo-env.d.ts
 !README.md
+!eas.json
 
 # Ignore node modules
 node_modules/
-
 # Ignore Expo CLI generated environment file
 expo-env.d.ts
