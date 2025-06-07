@@ -27,4 +27,5 @@
 # Ignore node modules
 node_modules/
 # Ignore Expo CLI generated environment file
-expo-env.d.ts
+expo-env.d.tsandroid/
+ios/

@@ -13,7 +13,8 @@
     },
     "runtimeVersion": "1.0.0",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.siddhantsingh110.WebsharkMyHealth"
     },
     "android": {
       "adaptiveIcon": {
