@@ -7,9 +7,6 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "updates": {
-      "url": "https://u.expo.dev/7e7aa94d-6aed-4e1d-aa6c-536294324239"
-    },
     "runtimeVersion": "1.0.0",
     "android": {
       "package": "com.siddhantsingh110.WebsharkMyHealth"

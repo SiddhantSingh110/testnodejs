@@ -15,6 +15,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@expo/config-plugins": "~10.0.0",
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.3.0",
@@ -43,6 +44,9 @@
     "expo-system-ui": "~5.0.7",
     "expo-updates": "^0.28.14",
     "expo-web-browser": "~14.1.6",
+    "metro": "^0.82.4",
+    "metro-config": "^0.82.4",
+    "metro-resolver": "^0.82.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.74.5",
