@@ -17,10 +17,6 @@
       "bundleIdentifier": "com.siddhantsingh110.WebsharkMyHealth"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "assets/images/adaptiveicon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.siddhantsingh110.WebsharkMyHealth"
     },
     "web": {
