@@ -6,12 +6,15 @@
     "orientation": "portrait",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "runtimeVersion": "1.0.0",
     "android": {
       "package": "com.siddhantsingh110.WebsharkMyHealth"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store"
+    ],
     "extra": {
       "eas": {
         "projectId": "7e7aa94d-6aed-4e1d-aa6c-536294324239"
