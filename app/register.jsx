@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
@@ -13,10 +13,15 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptPolicies, setAcceptPolicies] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Modal state for policy display
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [selectedPolicy, setSelectedPolicy] = useState(null);
   
   const { signUp } = useAuth();
   const router = useRouter();
@@ -34,6 +39,11 @@ export default function Register() {
     
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
+      return false;
+    }
+    
+    if (!acceptPolicies) {
+      setError('Please accept the Terms & Conditions and Privacy Policy to continue');
       return false;
     }
     
@@ -67,6 +77,130 @@ export default function Register() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openPolicy = (policyType) => {
+    setSelectedPolicy(policyType);
+    setShowPolicyModal(true);
+  };
+
+  const closePolicyModal = () => {
+    setShowPolicyModal(false);
+    setSelectedPolicy(null);
+  };
+
+  const getPolicyContent = (policyType) => {
+    switch (policyType) {
+      case 'terms':
+        return {
+          title: 'Terms & Conditions',
+          content: `Welcome to Webshark Health. By using our services, you agree to these terms.
+
+1. ACCEPTANCE OF TERMS
+By accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement.
+
+2. SERVICES
+Webshark Health provides health monitoring and reporting services. We reserve the right to modify or discontinue services at any time.
+
+3. USER RESPONSIBILITIES
+Users are responsible for maintaining the confidentiality of their account information and for all activities that occur under their account.
+
+4. PRIVACY
+Your privacy is important to us. Please review our Privacy Policy to understand how we collect and use your information.
+
+5. LIMITATION OF LIABILITY
+Webshark Health shall not be liable for any indirect, incidental, special, consequential, or punitive damages.
+
+6. MODIFICATIONS
+We reserve the right to modify these terms at any time. Continued use of the service constitutes acceptance of modified terms.
+
+Contact us at support@websharkhealth.com for questions about these terms.`
+        };
+      case 'privacy':
+        return {
+          title: 'Privacy Policy',
+          content: `This Privacy Policy describes how Webshark Health collects, uses, and protects your information.
+
+INFORMATION WE COLLECT
+- Personal identification information (name, phone, email)
+- Health data you choose to share
+- Usage data and analytics
+
+HOW WE USE YOUR INFORMATION
+- To provide and improve our services
+- To communicate with you about your account
+- To ensure the security of our platform
+
+DATA PROTECTION
+We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+
+DATA SHARING
+We do not sell, trade, or rent your personal information to third parties. We may share information only:
+- With your explicit consent
+- To comply with legal obligations
+- To protect our rights and safety
+
+YOUR RIGHTS
+You have the right to:
+- Access your personal data
+- Correct inaccurate information
+- Request deletion of your data
+- Withdraw consent
+
+CONTACT US
+If you have questions about this Privacy Policy, contact us at privacy@websharkhealth.com.`
+        };
+      default:
+        return { title: 'Policy', content: 'Policy content not available.' };
+    }
+  };
+
+  const PolicyModal = () => {
+    if (!selectedPolicy) return null;
+    
+    const policy = getPolicyContent(selectedPolicy);
+    
+    return (
+      <Modal
+        visible={showPolicyModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={closePolicyModal}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <LinearGradient
+            colors={['#091429', '#0F2248', '#162F65']}
+            style={styles.modalBackground}
+          />
+          
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{policy.title}</Text>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={closePolicyModal}
+            >
+              <Ionicons name="close" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalContentContainer}
+          >
+            <Text style={styles.policyContentText}>{policy.content}</Text>
+          </ScrollView>
+          
+          <View style={styles.modalFooter}>
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={closePolicyModal}
+            >
+              <Text style={styles.modalCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
+    );
   };
 
   return (
@@ -211,11 +345,31 @@ export default function Register() {
             </View>
             
             <View style={styles.policyContainer}>
-              <Text style={styles.policyText}>
-                By signing up, you agree to our{" "}
-                <Text style={styles.policyLink}>Terms of Service</Text> and{" "}
-                <Text style={styles.policyLink}>Privacy Policy</Text>
-              </Text>
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                onPress={() => setAcceptPolicies(!acceptPolicies)}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.checkbox, acceptPolicies && styles.checkboxChecked]}>
+                  {acceptPolicies && <Ionicons name="checkmark" size={16} color="#fff" />}
+                </View>
+                <Text style={styles.policyText}>
+                  I agree to Webshark Health's{" "}
+                  <Text 
+                    style={styles.policyLink}
+                    onPress={() => openPolicy('terms')}
+                  >
+                    Terms & Conditions
+                  </Text>
+                  {" "}and{" "}
+                  <Text 
+                    style={styles.policyLink}
+                    onPress={() => openPolicy('privacy')}
+                  >
+                    Privacy Policy
+                  </Text>
+                </Text>
+              </TouchableOpacity>
             </View>
             
             <LinearGradient
@@ -247,6 +401,8 @@ export default function Register() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      <PolicyModal />
     </SafeAreaView>
   );
 }
@@ -315,7 +471,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(160, 192, 255, 0.2)',
-    // Fix for autofill styling
     overflow: 'hidden',
   },
   inputIcon: {
@@ -327,16 +482,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 14,
     fontSize: 16,
-    // Override autofill colors
     backgroundColor: 'transparent',
     ...(Platform.OS === 'ios' && {
-      // iOS specific autofill styling
       textShadowColor: 'transparent',
       textShadowOffset: { width: 0, height: 0 },
       textShadowRadius: 0,
     }),
     ...(Platform.OS === 'android' && {
-      // Android specific autofill styling
       backgroundImage: 'none',
       boxShadow: 'none',
     }),
@@ -346,17 +498,38 @@ const styles = StyleSheet.create({
   },
   policyContainer: {
     marginBottom: 24,
-    paddingHorizontal: 10,
+    paddingHorizontal: 4,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#38BFA7',
+    borderRadius: 4,
+    marginRight: 12,
+    marginTop: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  checkboxChecked: {
+    backgroundColor: '#38BFA7',
+    borderColor: '#38BFA7',
   },
   policyText: {
     color: '#a0c0ff',
     lineHeight: 20,
     fontSize: 14,
-    textAlign: 'center',
+    flex: 1,
   },
   policyLink: {
     color: '#38BFA7',
     fontWeight: '500',
+    textDecorationLine: 'underline',
   },
   buttonGradient: {
     borderRadius: 12,
@@ -409,5 +582,68 @@ const styles = StyleSheet.create({
     color: '#38BFA7',
     fontSize: 16,
     fontWeight: '600',
-  }
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#091429',
+  },
+  modalBackground: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    paddingTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(160, 192, 255, 0.2)',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    flex: 1,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalContentContainer: {
+    padding: 20,
+  },
+  policyContentText: {
+    color: '#a0c0ff',
+    fontSize: 14,
+    lineHeight: 22,
+    textAlign: 'left',
+  },
+  modalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(160, 192, 255, 0.2)',
+  },
+  modalCloseButton: {
+    backgroundColor: '#38BFA7',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

@@ -1,24 +1,39 @@
 const ENV = {
   dev: {
-    apiUrl: 'http://192.168.0.112:8001/api',
+    apiUrl: 'http://192.168.0.112:8001/api', // Local ngrok
+    environment: 'development'
   },
   staging: {
-    apiUrl: 'https://staging-api.websharkmedical.com/api',
+    apiUrl: 'https://live.websharkmyhealth.com/api', // VPS for testing
+    environment: 'staging'
   },
   prod: {
-    apiUrl: 'https://api.websharkmedical.com/api',
+    apiUrl: 'https://live.websharkmyhealth.com/api', // VPS for production  
+    environment: 'production'
   }
 };
 
-// This should use process.env.NODE_ENV
-const getEnvVars = (env = process.env.NODE_ENV) => {
-  if (env === 'development' || env === '') {
-    return ENV.dev;
-  } else if (env === 'staging') {
-    return ENV.staging;
-  } else if (env === 'production') {
-    return ENV.prod;
+// 🔧 MANUAL SWITCH - Change this when needed
+const CURRENT_ENV = 'development'; // Change to 'dev', 'staging', or 'prod'
+
+const getEnvVars = () => {
+  switch (CURRENT_ENV) {
+    case 'dev':
+      console.log('🔧 Using DEVELOPMENT environment');
+      return ENV.dev;
+    case 'staging':
+      console.log('🧪 Using STAGING environment');
+      return ENV.staging;
+    case 'prod':
+      console.log('🚀 Using PRODUCTION environment');
+      return ENV.prod;
+    default:
+      console.log('🔧 Fallback to DEVELOPMENT environment');
+      return ENV.dev;
   }
 };
 
-export default getEnvVars();  // Note: immediately invoke the function
+const envVars = getEnvVars();
+console.log('📡 API URL:', envVars.apiUrl);
+
+export default envVars;

@@ -43,6 +43,13 @@ export default function RootLayout() {
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="register" options={{ headerShown: false }} />
             <Stack.Screen name="tabs" options={{ headerShown: false, gestureEnabled: false }} />
+            
+            {/* Add policies routes */}
+            <Stack.Screen name="policies/index" options={{ headerShown: false }} />
+            <Stack.Screen name="policies/terms" options={{ headerShown: false }} />
+            <Stack.Screen name="policies/privacy" options={{ headerShown: false }} />
+            <Stack.Screen name="policies/google-api" options={{ headerShown: false }} />
+            <Stack.Screen name="policies/security" options={{ headerShown: false }} />
           </Stack>
         </PaperProvider>
       </SafeAreaProvider>

@@ -1,9 +1,13 @@
+// services/HealthMetricsAPI.js - Enhanced for VPS connectivity
 import * as SecureStore from 'expo-secure-store';
+import environment from '../config/environment';
 
 class HealthMetricsAPI {
   constructor() {
-    this.baseURL = 'http://192.168.0.112:8001/api';
+    this.baseURL = environment.apiUrl;
     this.token = null;
+    this.defaultTimeout = 45000; // 45 seconds for VPS
+    this.retryCount = 3;
   }
 
   async init() {
@@ -16,61 +20,6 @@ class HealthMetricsAPI {
     }
   }
 
-  async setToken(token) {
-    try {
-      this.token = token;
-      await SecureStore.setItemAsync('userToken', token);
-    } catch (error) {
-      console.error('Error storing token:', error);
-    }
-  }
-
-  async clearToken() {
-    try {
-      this.token = null;
-      await SecureStore.deleteItemAsync('userToken');
-    } catch (error) {
-      console.error('Error clearing token:', error);
-    }
-  }
-// ✨ FIXED: AsyncStorage helpers for timeline persistence
-async getTimelineDismissTime() {
-  try {
-    const dismissTime = await SecureStore.getItemAsync('timeline_dismiss_time');
-    const parsedTime = dismissTime ? parseInt(dismissTime) : 0;
-    
-    // Validate the timestamp
-    if (isNaN(parsedTime) || parsedTime < 0) {
-      console.warn('Invalid dismiss time found, resetting to 0');
-      return 0;
-    }
-    
-    return parsedTime;
-  } catch (error) {
-    console.error('Error getting timeline dismiss time:', error);
-    return 0;
-  }
-}
-
-
-async setTimelineDismissTime() {
-  try {
-    const now = Date.now();
-    
-    // Validate timestamp before storing
-    if (isNaN(now) || now <= 0) {
-      throw new Error('Invalid timestamp generated');
-    }
-    
-    await SecureStore.setItemAsync('timeline_dismiss_time', now.toString());
-    console.log('✅ Timeline dismiss time saved:', new Date(now).toISOString());
-    return true;
-  } catch (error) {
-    console.error('Error setting timeline dismiss time:', error);
-    return false;
-  }
-}
-
   getHeaders() {
     const headers = {
       'Content-Type': 'application/json',
@@ -82,59 +31,111 @@ async setTimelineDismissTime() {
     return headers;
   }
 
-  async handleResponse(response) {
-    if (!response.ok) {
-      if (response.status === 401) {
-        await this.clearToken();
-        throw new Error('Authentication failed. Please login again.');
+  // Enhanced fetch with retry logic and better timeout handling
+  async fetchWithRetry(url, options = {}, retryCount = 0) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeout);
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          ...this.getHeaders(),
+          ...options.headers,
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          await this.clearToken();
+          throw new Error('Authentication failed. Please login again.');
+        }
+        
+        // Retry on server errors
+        if (response.status >= 500 && retryCount < this.retryCount) {
+          console.log(`Server error ${response.status}, retrying... (${retryCount + 1}/${this.retryCount})`);
+          await this.delay(1000 * (retryCount + 1));
+          return this.fetchWithRetry(url, options, retryCount + 1);
+        }
+        
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP Error: ${response.status}`);
       }
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP Error: ${response.status}`);
+
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        console.error('Request timed out:', url);
+        
+        // Retry on timeout
+        if (retryCount < this.retryCount) {
+          console.log(`Timeout error, retrying... (${retryCount + 1}/${this.retryCount})`);
+          await this.delay(2000 * (retryCount + 1)); // Longer delay for timeouts
+          return this.fetchWithRetry(url, options, retryCount + 1);
+        }
+        
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      // Retry on network errors
+      if (error.message.includes('fetch') && retryCount < this.retryCount) {
+        console.log(`Network error, retrying... (${retryCount + 1}/${this.retryCount})`);
+        await this.delay(1000 * (retryCount + 1));
+        return this.fetchWithRetry(url, options, retryCount + 1);
+      }
+      
+      console.error(`Request failed:`, error);
+      throw error;
     }
-    return response.json();
+  }
+
+  async delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async get(endpoint) {
+    const url = `${this.baseURL}${endpoint}`;
+    console.log(`📡 GET ${endpoint}`);
+    const startTime = Date.now();
+    
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-      return this.handleResponse(response);
+      const data = await this.fetchWithRetry(url, { method: 'GET' });
+      const duration = Date.now() - startTime;
+      console.log(`✅ GET ${endpoint} completed (${duration}ms)`);
+      return data;
     } catch (error) {
-      console.error(`GET ${endpoint} failed:`, error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ GET ${endpoint} failed after ${duration}ms:`, error.message);
       throw error;
     }
   }
 
   async post(endpoint, data) {
+    const url = `${this.baseURL}${endpoint}`;
+    console.log(`📡 POST ${endpoint}`);
+    const startTime = Date.now();
+    
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const result = await this.fetchWithRetry(url, {
         method: 'POST',
-        headers: this.getHeaders(),
         body: JSON.stringify(data),
       });
-      return this.handleResponse(response);
+      const duration = Date.now() - startTime;
+      console.log(`✅ POST ${endpoint} completed (${duration}ms)`);
+      return result;
     } catch (error) {
-      console.error(`POST ${endpoint} failed:`, error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ POST ${endpoint} failed after ${duration}ms:`, error.message);
       throw error;
     }
   }
 
-  async delete(endpoint) {
-    try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: 'DELETE',
-        headers: this.getHeaders(),
-      });
-      return this.handleResponse(response);
-    } catch (error) {
-      console.error(`DELETE ${endpoint} failed:`, error);
-      throw error;
-    }
-  }
-
-  // ✨ Enhanced: Get metrics with full metadata
+  // Enhanced getMetrics with fallback
   async getMetrics(filters = {}) {
     try {
       const queryParams = new URLSearchParams();
@@ -145,75 +146,139 @@ async setTimelineDismissTime() {
       });
       const queryString = queryParams.toString();
       const endpoint = `/patient/metrics${queryString ? `?${queryString}` : ''}`;
+      
       const response = await this.get(endpoint);
       
-      console.log('✅ Health metrics loaded with metadata:', {
+      console.log('✅ Health metrics loaded:', {
         total_metrics: response.summary?.total_metrics || 0,
         recent_metrics: response.summary?.recent_metrics || 0,
-        has_report_metrics: response.ui_hints?.has_report_metrics || false,
-        unique_types: response.summary?.unique_metric_types || 0
       });
       
       return response;
     } catch (error) {
-      console.error('Get metrics failed:', error);
+      console.error('❌ Get metrics failed:', error.message);
+      
+      // Return fallback data instead of throwing
+      if (error.message.includes('timeout') || error.message.includes('fetch')) {
+        console.warn('⚠️ Returning fallback metrics data due to network issues');
+        return {
+          metrics: {},
+          summary: {
+            total_metrics: 0,
+            recent_metrics: 0,
+            metrics_by_category: {},
+            metrics_by_source: { manual: 0, report: 0, device: 0 },
+            unique_metric_types: 0,
+          },
+          ui_hints: {
+            has_new_metrics: false,
+            show_review_badges: false,
+            has_report_metrics: false,
+            categories_available: [],
+          },
+          filters_applied: filters,
+          generated_at: new Date().toISOString(),
+          fallback_data: true,
+        };
+      }
+      
       throw error;
     }
   }
 
-  // ✨ Enhanced: Get recent metrics with dismiss time check
+  // Keep existing methods but add fallback handling...
   async getRecentMetrics(days = 7) {
     try {
       const response = await this.get(`/patient/metrics/recent?days=${days}`);
       const dismissTime = await this.getTimelineDismissTime();
       
-      // Filter timeline items based on dismiss time
       const filteredTimeline = (response.timeline || []).filter(item => {
         if (item.type === 'report_extraction') {
           const itemTime = new Date(item.date).getTime();
-          return itemTime > dismissTime; // Only show if newer than last dismiss
+          return itemTime > dismissTime;
         }
-        return true; // Keep manual entries
+        return true;
       });
 
-      console.log('✅ Recent metrics loaded:', {
-        total: response.timeline?.length || 0,
-        filtered: filteredTimeline.length,
-        dismiss_time: new Date(dismissTime).toISOString()
-      });
-      
       return {
         ...response,
         timeline: filteredTimeline,
         has_new_items: filteredTimeline.length > 0
       };
     } catch (error) {
-      console.error('Get recent metrics failed:', error);
-      throw error;
+      console.error('❌ Get recent metrics failed:', error.message);
+      
+      // Return empty timeline on error
+      return {
+        timeline: [],
+        summary: {
+          total_recent: 0,
+          from_reports: 0,
+          manual_entries: 0,
+          days_covered: days,
+          latest_extraction: null,
+        },
+        has_new_items: false,
+        fallback_data: true,
+      };
     }
   }
 
-  // ✨ New: Mark metrics as reviewed (remove review badges)
-  async markMetricsAsReviewed(metricIds) {
+  // Keep all other existing methods...
+  async getTimelineDismissTime() {
     try {
-      const response = await this.post('/patient/metrics/mark-reviewed', {
-        metric_ids: metricIds
-      });
-      console.log('✅ Metrics marked as reviewed:', response.updated_count);
-      return response;
+      const dismissTime = await SecureStore.getItemAsync('timeline_dismiss_time');
+      const parsedTime = dismissTime ? parseInt(dismissTime) : 0;
+      
+      if (isNaN(parsedTime) || parsedTime < 0) {
+        console.warn('Invalid dismiss time found, resetting to 0');
+        return 0;
+      }
+      
+      return parsedTime;
     } catch (error) {
-      console.error('Mark as reviewed failed:', error);
-      throw error;
+      console.error('Error getting timeline dismiss time:', error);
+      return 0;
     }
   }
 
+  async setTimelineDismissTime() {
+    try {
+      const now = Date.now();
+      
+      if (isNaN(now) || now <= 0) {
+        throw new Error('Invalid timestamp generated');
+      }
+      
+      await SecureStore.setItemAsync('timeline_dismiss_time', now.toString());
+      console.log('✅ Timeline dismiss time saved:', new Date(now).toISOString());
+      return true;
+    } catch (error) {
+      console.error('Error setting timeline dismiss time:', error);
+      return false;
+    }
+  }
+
+  async clearToken() {
+    try {
+      this.token = null;
+      await SecureStore.deleteItemAsync('userToken');
+    } catch (error) {
+      console.error('Error clearing token:', error);
+    }
+  }
+
+  // Missing methods that are called by your app
   async getInsights() {
     try {
+      console.log('📊 Fetching health insights...');
       const response = await this.get('/patient/metrics/insights');
       return response.insights || [];
     } catch (error) {
-      console.error('Get insights failed:', error);
-      throw error;
+      console.error('❌ Get insights failed:', error.message);
+      
+      // Return fallback insights
+      return [];
     }
   }
 
@@ -228,15 +293,17 @@ async setTimelineDismissTime() {
         notes: metricData.notes || '',
         measured_at: metricData.measured_at || new Date().toISOString()
       };
+      
       const response = await this.post('/patient/metrics', payload);
       console.log('✅ New metric created:', response.metric?.type);
+      
       return {
         success: true,
         metric: response.metric,
         message: response.message
       };
     } catch (error) {
-      console.error('Create metric failed:', error);
+      console.error('❌ Create metric failed:', error.message);
       throw error;
     }
   }
@@ -249,24 +316,62 @@ async setTimelineDismissTime() {
         message: response.message
       };
     } catch (error) {
-      console.error('Delete metric failed:', error);
+      console.error('❌ Delete metric failed:', error.message);
       throw error;
     }
   }
 
-  // ✨ Enhanced: Get trends with reference ranges
+  async delete(endpoint) {
+    const url = `${this.baseURL}${endpoint}`;
+    console.log(`📡 DELETE ${endpoint}`);
+    const startTime = Date.now();
+    
+    try {
+      const result = await this.fetchWithRetry(url, {
+        method: 'DELETE',
+      });
+      const duration = Date.now() - startTime;
+      console.log(`✅ DELETE ${endpoint} completed (${duration}ms)`);
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ DELETE ${endpoint} failed after ${duration}ms:`, error.message);
+      throw error;
+    }
+  }
+
   async getTrends(metricType, timeframe = 'month') {
     try {
       const response = await this.get(`/patient/metrics/trends/${metricType}?timeframe=${timeframe}`);
       return response;
     } catch (error) {
-      console.error('Get trends failed:', error);
+      console.error('❌ Get trends failed:', error.message);
+      
+      // Return fallback trends data
+      return {
+        count: 0,
+        latest: null,
+        average: null,
+        trend: [],
+        reference_range: null,
+        fallback_data: true,
+      };
+    }
+  }
+
+  async markMetricsAsReviewed(metricIds) {
+    try {
+      const response = await this.post('/patient/metrics/mark-reviewed', {
+        metric_ids: metricIds
+      });
+      console.log('✅ Metrics marked as reviewed:', response.updated_count);
+      return response;
+    } catch (error) {
+      console.error('❌ Mark as reviewed failed:', error.message);
       throw error;
     }
   }
 
-    // ✨ Enhanced: Handle report upload with better metrics integration
-  // ✨ DEBUG: Handle report upload with extensive logging
   async handleReportUploadComplete(uploadResponse) {
     try {
       console.log('🔍 UPLOAD RESPONSE RECEIVED:', {
@@ -298,7 +403,6 @@ async setTimelineDismissTime() {
         should_refresh: newMetricsAvailable
       });
 
-      // If new metrics were extracted, we should refresh the health screen
       if (newMetricsAvailable && metricsExtracted > 0) {
         console.log('✅ New health metrics detected - health screen should refresh');
         
@@ -328,6 +432,15 @@ async setTimelineDismissTime() {
         extractedMetrics: [],
         summary: null
       };
+    }
+  }
+
+  async setToken(token) {
+    try {
+      this.token = token;
+      await SecureStore.setItemAsync('userToken', token);
+    } catch (error) {
+      console.error('Error storing token:', error);
     }
   }
 }

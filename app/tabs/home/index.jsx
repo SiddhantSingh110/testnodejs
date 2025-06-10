@@ -23,7 +23,6 @@ import ENV from '../../../config/environment';
 import healthMetricsAPI from '../../../services/HealthMetricsAPI';
 import { fetchReports } from '../../../api/auth';
 
-
 const { width, height } = Dimensions.get('window');
 
 const HealthMetricCard = ({ metric, index }) => {
@@ -132,13 +131,51 @@ export default function EnhancedDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [healthMetrics, setHealthMetrics] = useState([]);
   const [recentReports, setRecentReports] = useState([]);
-  const [bodyProblems, setBodyProblems] = useState({ diseases: 4, medications: 13 });
+  const [healthOverview, setHealthOverview] = useState({ 
+    title: "Your Health Overview",
+    subtitle: "Start Your Health Journey",
+    reportsAnalyzed: 0, 
+    healthInsights: 0,
+    isNewUser: true,
+    encouragementText: "Upload your first report to get AI insights"
+  });
   const scrollY = new Animated.Value(0);
 
   // Helper function to get full image URL
   const getFullImageUrl = (relativePath) => {
     if (!relativePath) return null;
     return `${ENV.apiUrl.replace('/api', '')}/storage/${relativePath}`;
+  };
+
+  // Calculate health overview data dynamically
+  const calculateHealthOverview = (metrics, reports) => {
+    const hasMetrics = metrics.length >= 2;
+    const totalReports = reports.length;
+    
+    if (!hasMetrics) {
+      // New user experience
+      return {
+        title: "Your Health Overview",
+        subtitle: "Start Your Health Journey",
+        reportsAnalyzed: totalReports,
+        healthInsights: 0,
+        isNewUser: true,
+        encouragementText: totalReports === 0 ? "Upload your first report to get AI insights" : "Add more health data for personalized insights"
+      };
+    }
+    
+    // Experienced user - calculate real insights
+    const abnormalMetrics = metrics.filter(m => m.status === 'high' || m.status === 'borderline').length;
+    const totalInsights = Math.max(metrics.length + abnormalMetrics, totalReports * 2);
+    
+    return {
+      title: "Your Health Overview",
+      subtitle: "Health Insights Available",
+      reportsAnalyzed: totalReports,
+      healthInsights: Math.min(totalInsights, 99), // Cap at 99 for UI
+      isNewUser: false,
+      encouragementText: null
+    };
   };
 
   // Load dashboard data
@@ -169,14 +206,14 @@ export default function EnhancedDashboard() {
       // Set recent reports (limit to 3)
       setRecentReports((reportsData || []).slice(0, 3));
 
-      // Calculate body problems from health data
-      const problemsCount = calculateBodyProblems(processedMetrics, reportsData || []);
-      setBodyProblems(problemsCount);
+      // Calculate health overview from health data
+      const overviewData = calculateHealthOverview(processedMetrics, reportsData || []);
+      setHealthOverview(overviewData);
 
       console.log('✅ Dashboard data loaded:', {
         metrics: processedMetrics.length,
         reports: (reportsData || []).length,
-        problems: problemsCount
+        overview: overviewData
       });
 
     } catch (error) {
@@ -208,18 +245,6 @@ export default function EnhancedDashboard() {
     });
 
     return processed.slice(0, 4); // Show max 4 metrics
-  };
-
-  // Calculate body problems from health data
-  const calculateBodyProblems = (metrics, reports) => {
-    const problemMetrics = metrics.filter(m => m.status !== 'normal').length;
-    const diseaseCount = Math.max(problemMetrics, 4); // Default to 4 as shown in image
-    const medicationCount = reports.length * 2 + 7; // Estimate based on reports
-    
-    return {
-      diseases: diseaseCount,
-      medications: Math.min(medicationCount, 13) // Cap at 13 as shown in image
-    };
   };
 
   // Format metric name for display
@@ -315,38 +340,50 @@ export default function EnhancedDashboard() {
             </TouchableOpacity>
           </View>
 
-          {/* Body Section */}
+          {/* Health Overview Section */}
           <View style={styles.bodySection}>
-          <Image
+            <Image
               source={require('../../../assets/images/humanoid-transparent.png')}
               style={styles.bodyModelImage}
             />
             <View style={styles.bodyContent}>
-           
               <View style={styles.bodyTextSection}>
                 <Text style={styles.bodyTitle}>
-                  <Text style={styles.bodyTitleLine1}>Your Body</Text>
+                  <Text style={styles.bodyTitleLine1}>{healthOverview.title.split(' ')[0]} {healthOverview.title.split(' ')[1]}</Text>
                   {'\n'}
-                  <Text style={styles.bodyTitleLine2}>Problems</Text>
+                  <Text style={styles.bodyTitleLine2}>{healthOverview.title.split(' ')[2]}</Text>
                 </Text>
+                
+                {/* Dynamic Stats */}
                 <View style={styles.bodyStats}>
                   <View style={styles.bodyStat}>
-                    <Text style={styles.bodyStatNumber}>{String(bodyProblems.diseases).padStart(2, '0')}</Text>
-                    <Text style={styles.bodyStatLabel}>Diseases</Text>
+                    <Text style={styles.bodyStatNumber}>
+                      {String(healthOverview.reportsAnalyzed).padStart(2, '0')}
+                    </Text>
+                    <Text style={styles.bodyStatLabel}>Reports Analyzed</Text>
                   </View>
                   <View style={styles.bodyStat}>
-                    <Text style={styles.bodyStatNumber}>{String(bodyProblems.medications)}</Text>
-                    <Text style={styles.bodyStatLabel}>Medication</Text>
+                    <Text style={styles.bodyStatNumber}>
+                      {String(healthOverview.healthInsights).padStart(2, '0')}
+                    </Text>
+                    <Text style={styles.bodyStatLabel}>Health Insights</Text>
                   </View>
                 </View>
+
+                {/* Encouragement Text for New Users */}
+                {healthOverview.isNewUser && healthOverview.encouragementText && (
+                  <View style={styles.encouragementContainer}>
+                    <Text style={styles.encouragementText}>{healthOverview.encouragementText}</Text>
+                    <TouchableOpacity 
+                      style={styles.getStartedButton}
+                      onPress={() => router.push('/tabs/upload')}
+                    >
+                      <Ionicons name="add-circle" size={16} color="#38BFA7" />
+                      <Text style={styles.getStartedButtonText}>Get Started</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
-              
-              {/* <View style={styles.bodyModelContainer}>
-                <Image
-                  source={require('../../../assets/images/humanoid-transparent.png')}
-                  style={styles.bodyModelImage}
-                />
-              </View> */}
             </View>
           </View>
         </LinearGradient>
@@ -638,7 +675,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
 
-  // Body Section
+  // Health Overview Section (formerly Body Section)
   bodySection: {
     paddingHorizontal: 20,
     flex: 1,
@@ -647,7 +684,7 @@ const styles = StyleSheet.create({
   },
   bodyContent: {
     flexDirection: 'column',
-    alignItems: 'top',
+    alignItems: 'flex-start',
   },
   bodyTextSection: {
     flex: 0,
@@ -677,6 +714,7 @@ const styles = StyleSheet.create({
   },
   bodyStats: {
     gap: 20,
+    marginBottom: 20,
   },
   bodyStat: {
     marginBottom: 10,
@@ -696,12 +734,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: '500',
   },
-  bodyModelContainer: {
-    width: "60%",
-    height: 300,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   bodyModelImage: {
     width: '100%',
     height: '100%',
@@ -710,6 +742,34 @@ const styles = StyleSheet.create({
     marginLeft: 100,
     zIndex: -1,
     marginBottom: -5,
+  },
+
+  // New User Encouragement
+  encouragementContainer: {
+    marginTop: 10,
+  },
+  encouragementText: {
+    fontSize: 14,
+    color: '#a0c0ff',
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  getStartedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(56, 191, 167, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 191, 167, 0.3)',
+    alignSelf: 'flex-start',
+  },
+  getStartedButtonText: {
+    color: '#38BFA7',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
 
   // Health Metrics Section
