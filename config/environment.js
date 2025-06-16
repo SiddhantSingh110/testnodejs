@@ -1,6 +1,6 @@
 const ENV = {
   dev: {
-    apiUrl: 'http://192.168.0.112:8001/api', // Local ngrok
+    apiUrl: 'http://192.168.0.171:8002/api', // Local Backend
     environment: 'development'
   },
   staging: {

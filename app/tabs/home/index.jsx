@@ -11,7 +11,8 @@ import {
   Image,
   RefreshControl,
   Alert,
-  Animated
+  Animated,
+  Platform
 } from 'react-native';
 import { useAuth } from '../../../hooks/useAuth';
 import { router, useFocusEffect } from 'expo-router';
@@ -616,8 +617,8 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.65,
-    zIndex: 1,
+    height: Platform.OS === 'android' ? height * 0.65 : height * 0.65,
+    zIndex: 0,
   },
   gradientBackground: {
     flex: 1,
@@ -627,13 +628,13 @@ const styles = StyleSheet.create({
   // Scrollable Content
   scrollView: {
     flex: 1,
-    zIndex: 2,
+    zIndex: Platform.OS === 'android' ? 50 : 2,
   },
   scrollContent: {
     paddingBottom: 120,
   },
   scrollSpacer: {
-    height: height * 0.45, // Reduced gap between sections
+    height: Platform.OS === 'android' ? height * 0.4 : height * 0.45,
   },
 
   // Header - Positioned lower
@@ -681,6 +682,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     position: 'relative',
+    zIndex: Platform.OS === 'android' ? 0 : 1,
+    marginTop: Platform.OS === 'android' ? -50 : 0,
   },
   bodyContent: {
     flexDirection: 'column',
@@ -735,11 +738,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   bodyModelImage: {
-    width: '100%',
-    height: '100%',
+    width: Platform.OS === 'android' ? '80%' : '100%',
+    height: Platform.OS === 'android' ? '80%' : '100%',
     position: 'absolute',
     resizeMode: 'cover',
-    marginLeft: 100,
+    marginLeft: Platform.OS === 'android' ? '150' : '120',
     zIndex: -1,
     marginBottom: -5,
   },
@@ -785,8 +788,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 10,
-    zIndex: 3,
-    marginTop: 140, // Overlap with body section
+    zIndex: Platform.OS === 'android' ? 100 : 3,
+    marginTop: Platform.OS === 'android' ? 150 : 140,
   },
   sectionHeader: {
     flexDirection: 'row',

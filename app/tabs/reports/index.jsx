@@ -1,6 +1,6 @@
 // app/tabs/reports/index.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Dimensions, Alert, Modal, Animated } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Dimensions, Alert, Modal, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -106,90 +106,123 @@ export default function Reports() {
     try {
       setIsDownloading(true);
       
-      let fileUri = '';
-      if (type === 'original') {
-        fileUri = selectedReport.file_url;
-      } else if (type === 'summary') {
-        fileUri = `${environment.apiUrl.replace('/api', '')}/api/patient/reports/${selectedReport.id}/summary-pdf`;
-      }
+      let endpoint = '';
+      let downloadType = '';
       
-      console.log(`📥 Starting download from: ${fileUri}`);
-
-      const fileName = `${type}_report_${Date.now()}.pdf`;
+      if (type === 'original') {
+        // ✅ Use secure download endpoint instead of file_url
+        endpoint = `${environment.apiUrl}/patient/reports/${selectedReport.id}/download`;
+        downloadType = 'Original Medical Report';
+      } else if (type === 'summary') {
+        // ✅ AI summary endpoint (already secure)
+        endpoint = `${environment.apiUrl}/patient/reports/${selectedReport.id}/summary-pdf`;
+        downloadType = 'AI Summary Report';
+      }
+  
+      // Create filename with report title
+      const reportTitle = selectedReport.title || selectedReport.report_title || 'medical_report';
+      const sanitizedTitle = reportTitle.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `${type}_${sanitizedTitle}_${Date.now()}.pdf`;
       const fileDestination = FileSystem.documentDirectory + fileName;
-
+  
+      console.log('📥 Downloading:', downloadType);
+      console.log('🔗 Endpoint:', endpoint);
+      console.log('📁 Destination:', fileDestination);
+  
       const downloadResumable = FileSystem.createDownloadResumable(
-        fileUri,
+        endpoint,
         fileDestination,
         {
-          headers: type === 'summary' ? { Authorization: `Bearer ${token}` } : {},
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Accept': 'application/pdf',
+            'User-Agent': 'WebsharkHealth-Mobile-App'
+          }
         }
       );
-
-      hideModal(); // Hide the modal before download
-      const { uri, status } = await downloadResumable.downloadAsync();
-
-      console.log(`📥 Download status: ${status}`);
-      console.log(`✅ File downloaded: ${uri}`);
-
-      // Check if file exists
+  
+      hideModal(); // Hide modal before download starts
+      
+      // Show download progress (optional)
+      console.log('🚀 Starting secure download...');
+      
+      const { uri, status, headers } = await downloadResumable.downloadAsync();
+  
+      console.log(`📥 Download completed with status: ${status}`);
+      console.log(`📄 Headers:`, headers);
+      console.log(`✅ File saved to: ${uri}`);
+  
+      // Verify download success
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) {
         throw new Error('Downloaded file does not exist');
       }
-
-      console.log(`📄 File size: ${fileInfo.size} bytes`);
-
-      // Wait longer for iOS to properly handle the file
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Check if sharing is available
-      const sharingAvailable = await Sharing.isAvailableAsync();
-      if (!sharingAvailable) {
-        throw new Error('Sharing is not available on this device');
-      }
-
-      try {
-        await Sharing.shareAsync(uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: `Share ${type === 'summary' ? 'AI Summary' : 'Original'} Report`,
-          UTI: 'com.adobe.pdf' // iOS specific
+  
+      // Validate file size and content
+      if (fileInfo.size < 500) {
+        // File too small, might be an error response
+        const fileContent = await FileSystem.readAsStringAsync(uri, { 
+          length: 1000,
+          encoding: FileSystem.EncodingType.UTF8 
         });
-        console.log("✅ File shared successfully");
-      } catch (shareError) {
-        console.log("❌ Sharing failed:", shareError);
         
-        // Fallback: Try again with longer delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('⚠️ Small file detected, content:', fileContent.substring(0, 200));
         
-        try {
-          await Sharing.shareAsync(uri, {
-            mimeType: 'application/pdf',
-            dialogTitle: `Share ${type === 'summary' ? 'AI Summary' : 'Original'} Report`
-          });
-          console.log("✅ File shared successfully on retry");
-        } catch (retryError) {
-          Alert.alert(
-            'Sharing Failed', 
-            'Unable to share the file. Please try again.',
-            [
-              { text: 'OK' },
-              { 
-                text: 'Try Again', 
-                onPress: () => handleDownload(type)
-              }
-            ]
-          );
+        if (fileContent.includes('error') || 
+            fileContent.includes('404') || 
+            fileContent.includes('<html>') ||
+            fileContent.includes('unauthorized')) {
+          throw new Error('Server returned an error instead of the file');
         }
       }
-
+  
+      console.log(`📊 Valid file downloaded - Size: ${fileInfo.size} bytes`);
+  
+      // Brief delay for file system
+      await new Promise(resolve => setTimeout(resolve, 300));
+  
+      // Attempt to share the file
+      const sharingAvailable = await Sharing.isAvailableAsync();
+      if (!sharingAvailable) {
+        Alert.alert(
+          'Download Complete', 
+          `${downloadType} has been downloaded successfully but sharing is not available on this device.`
+        );
+        return;
+      }
+  
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: downloadType,
+        UTI: 'com.adobe.pdf'
+      });
+  
+      console.log("✅ File shared successfully");
+  
     } catch (error) {
-      console.log("❌ Download failed:", error);
+      console.error("❌ Download failed:", error);
+      
+      let errorMessage = 'Unable to download file.';
+      let errorTitle = 'Download Failed';
+      
+      if (error.message.includes('404') || error.message.includes('not found')) {
+        errorMessage = 'File not found on server. The file may have been moved or deleted.';
+      } else if (error.message.includes('403') || error.message.includes('401') || error.message.includes('unauthorized')) {
+        errorMessage = 'Access denied. Please log out and log back in.';
+        errorTitle = 'Authentication Error';
+      } else if (error.message.includes('network') || error.message.includes('timeout')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+        errorTitle = 'Connection Error';
+      } else if (error.message.includes('Server returned an error')) {
+        errorMessage = 'The server encountered an error. Please try again later.';
+        errorTitle = 'Server Error';
+      }
+      
       Alert.alert(
-        'Download Failed', 
-        error.message || 'Unable to download file.',
+        errorTitle, 
+        errorMessage,
         [
-          { text: 'OK' },
+          { text: 'Cancel', style: 'cancel' },
           { 
             text: 'Retry', 
             onPress: () => handleDownload(type)
@@ -343,6 +376,9 @@ export default function Reports() {
     // ✅ Show OCR status for image reports
     const showOCRInfo = item.file_type === 'image' && item.ocr_info;
     
+    // ✅ Check file availability (instead of file_url)
+    const fileAvailable = item.file_available !== false; // Default to true if not specified
+    
     return (
       <TouchableOpacity 
         style={styles.reportCard}
@@ -362,9 +398,10 @@ export default function Reports() {
                 <Text style={styles.reportTitle} numberOfLines={1}>
                   {truncateText(item.title || item.report_title || 'Medical Report', 25)}
                 </Text>
-                {/* ✅ Show file type and OCR status */}
+                {/* ✅ Show file type, size, and OCR status */}
                 <Text style={styles.fileTypeText}>
                   {item.file_type?.toUpperCase() || 'PDF'}
+                  {item.file_size && ` • ${item.file_size.formatted}`}
                   {showOCRInfo && (
                     <Text style={[
                       styles.ocrStatusText,
@@ -403,6 +440,16 @@ export default function Reports() {
                 </Text>
               </View>
             )}
+            
+            {/* ✅ Show file availability status */}
+            {!fileAvailable && (
+              <View style={styles.detailRow}>
+                <Ionicons name="warning-outline" size={14} color="#FF5656" />
+                <Text style={[styles.detailText, { color: '#FF5656' }]}>
+                  File not available
+                </Text>
+              </View>
+            )}
           </View>
           
           <View style={styles.reportFooter}>
@@ -415,11 +462,21 @@ export default function Reports() {
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: 'rgba(56, 191, 167, 0.2)' }]}
-              onPress={() => showModal(item)}
+              style={[
+                styles.actionButton, 
+                { backgroundColor: fileAvailable ? 'rgba(56, 191, 167, 0.2)' : 'rgba(128, 128, 128, 0.2)' }
+              ]}
+              onPress={() => fileAvailable ? showModal(item) : null}
+              disabled={!fileAvailable}
             >
-              <Ionicons name="download-outline" size={16} color="#fff" />
-              <Text style={styles.actionText}>Download</Text>
+              <Ionicons 
+                name="download-outline" 
+                size={16} 
+                color={fileAvailable ? "#fff" : "#888"} 
+              />
+              <Text style={[styles.actionText, { color: fileAvailable ? "#fff" : "#888" }]}>
+                Download
+              </Text>
             </TouchableOpacity>
           </View>
         </LinearGradient>
@@ -587,8 +644,10 @@ const styles = StyleSheet.create({
   },
   reportContent: { 
     padding: 16,
-    backgroundColor: 'rgba(15, 34, 72, 0.5)',
-  },
+    backgroundColor: Platform.OS === 'android' 
+    ? '#0F2248' 
+    : 'rgba(15, 34, 72, 0.5)',
+},
   reportHeader: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 

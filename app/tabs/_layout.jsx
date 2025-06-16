@@ -60,7 +60,7 @@ export default function TabsLayout() {
         tabBarBackground: () => (
           <BlurView
             tint="dark"
-            intensity={Platform.OS === 'ios' ? 80 : 100}
+            intensity={Platform.OS === 'ios' ? 80 : 140}
             style={StyleSheet.absoluteFill}
           >
             <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(9, 20, 41, 0.7)' }]} />

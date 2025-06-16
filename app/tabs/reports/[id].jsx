@@ -21,7 +21,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { transform } from 'typescript';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import environment from '../../../config/environment';
 
 const { width } = Dimensions.get('window');
 
@@ -271,11 +273,139 @@ export default function ReportDetail() {
 
   const downloadToDevice = async (type) => {
     try {
-      Alert.alert('Download Started', `${type === 'summary' ? 'AI Summary' : 'Original'} report is being downloaded to your device...`);
-      // Implement actual download logic here
-      // This would integrate with your Laravel backend download endpoints
+      let endpoint = '';
+      let downloadType = '';
+      
+      if (type === 'original') {
+        // ✅ Use secure download endpoint instead of file_url
+        endpoint = `${environment.apiUrl}/patient/reports/${id}/download`;
+        downloadType = 'Original Medical Report';
+      } else if (type === 'summary') {
+        // ✅ AI summary endpoint (already secure)
+        endpoint = `${environment.apiUrl}/patient/reports/${id}/summary-pdf`;
+        downloadType = 'AI Summary Report';
+      }
+  
+      // Create filename with report title
+      const reportTitle = report?.title || report?.report_title || 'medical_report';
+      const sanitizedTitle = reportTitle.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `${type}_${sanitizedTitle}_${Date.now()}.pdf`;
+      const fileDestination = FileSystem.documentDirectory + fileName;
+  
+      console.log('📥 Downloading from detail screen:', downloadType);
+      console.log('🔗 Endpoint:', endpoint);
+      console.log('📁 Destination:', fileDestination);
+  
+      // Show initial loading alert
+      Alert.alert(
+        'Download Started', 
+        `${downloadType} is being downloaded...`,
+        [{ text: 'OK' }]
+      );
+  
+      const downloadResumable = FileSystem.createDownloadResumable(
+        endpoint,
+        fileDestination,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Accept': 'application/pdf',
+            'User-Agent': 'WebsharkHealth-Mobile-App'
+          }
+        }
+      );
+  
+      console.log('🚀 Starting secure download from detail screen...');
+      
+      const { uri, status, headers } = await downloadResumable.downloadAsync();
+  
+      console.log(`📥 Download completed with status: ${status}`);
+      console.log(`📄 Headers:`, headers);
+      console.log(`✅ File saved to: ${uri}`);
+  
+      // Verify download success
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists) {
+        throw new Error('Downloaded file does not exist');
+      }
+  
+      // Validate file size and content
+      if (fileInfo.size < 500) {
+        // File too small, might be an error response
+        const fileContent = await FileSystem.readAsStringAsync(uri, { 
+          length: 1000,
+          encoding: FileSystem.EncodingType.UTF8 
+        });
+        
+        console.log('⚠️ Small file detected, content:', fileContent.substring(0, 200));
+        
+        if (fileContent.includes('error') || 
+            fileContent.includes('404') || 
+            fileContent.includes('<html>') ||
+            fileContent.includes('unauthorized')) {
+          throw new Error('Server returned an error instead of the file');
+        }
+      }
+  
+      console.log(`📊 Valid file downloaded from detail screen - Size: ${fileInfo.size} bytes`);
+  
+      // Brief delay for file system
+      await new Promise(resolve => setTimeout(resolve, 300));
+  
+      // Attempt to share the file
+      const sharingAvailable = await Sharing.isAvailableAsync();
+      if (!sharingAvailable) {
+        Alert.alert(
+          'Download Complete', 
+          `${downloadType} has been downloaded successfully but sharing is not available on this device.`
+        );
+        return;
+      }
+  
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: downloadType,
+        UTI: 'com.adobe.pdf'
+      });
+  
+      console.log("✅ File shared successfully from detail screen");
+  
+      // Success message
+      Alert.alert(
+        'Download Complete',
+        `${downloadType} has been downloaded and shared successfully!`
+      );
+  
     } catch (error) {
-      Alert.alert('Download Failed', 'Unable to download file. Please try again.');
+      console.error("❌ Download failed from detail screen:", error);
+      
+      let errorMessage = 'Unable to download file.';
+      let errorTitle = 'Download Failed';
+      
+      if (error.message.includes('404') || error.message.includes('not found')) {
+        errorMessage = 'File not found on server. The file may have been moved or deleted.';
+      } else if (error.message.includes('403') || error.message.includes('401') || error.message.includes('unauthorized')) {
+        errorMessage = 'Access denied. Please log out and log back in.';
+        errorTitle = 'Authentication Error';
+      } else if (error.message.includes('network') || error.message.includes('timeout')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+        errorTitle = 'Connection Error';
+      } else if (error.message.includes('Server returned an error')) {
+        errorMessage = 'The server encountered an error. Please try again later.';
+        errorTitle = 'Server Error';
+      }
+      
+      Alert.alert(
+        errorTitle, 
+        errorMessage,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Retry', 
+            onPress: () => downloadToDevice(type)
+          }
+        ]
+      );
     }
   };
 

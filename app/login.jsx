@@ -106,6 +106,8 @@ export default function Login() {
               onChangeText={setPassword}
               autoComplete="current-password"
               textContentType="password"
+              autoCapitalize="none"
+              autoCorrect={false}  
             />
             <TouchableOpacity 
               style={styles.eyeIcon}

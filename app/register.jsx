@@ -306,6 +306,8 @@ If you have questions about this Privacy Policy, contact us at privacy@websharkh
                 autoComplete="new-password"
                 textContentType="newPassword"
                 passwordRules="minlength: 6;"
+                autoCapitalize="none"
+                autoCorrect={false}  
               />
               <TouchableOpacity 
                 style={styles.eyeIcon}
@@ -331,6 +333,8 @@ If you have questions about this Privacy Policy, contact us at privacy@websharkh
                 onChangeText={setConfirmPassword}
                 autoComplete="new-password"
                 textContentType="newPassword"
+                autoCapitalize="none"  // Add this line
+                autoCorrect={false}  
               />
               <TouchableOpacity 
                 style={styles.eyeIcon}
