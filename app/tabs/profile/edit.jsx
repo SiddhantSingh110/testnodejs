@@ -1,6 +1,6 @@
 // app/tabs/profile/edit.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Platform, Image, Modal, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Platform, Image, Modal, ActivityIndicator, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -468,227 +468,235 @@ export default function EditProfile() {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView 
-        style={styles.scrollContainer} 
-        contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom + 90, 100)
-        }}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <View style={styles.profileImageSection}>
-          <TouchableOpacity onPress={pickImage} style={styles.imageContainer} activeOpacity={0.8}>
-            {image ? (
-              <Image 
-                source={{ uri: image }} 
-                style={styles.profileImage}
-                resizeMode="cover"
-              />
-            ) : form.profile_photo ? (
-              <Image 
-                source={{ uri: getFullImageUrl(form.profile_photo) }} 
-                style={styles.profileImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <LinearGradient
-                colors={['#2C7BE5', '#38BFA7']}
-                style={styles.placeholderImage}
-              >
-                <Ionicons name="person" size={40} color="#fff" />
-              </LinearGradient>
-            )}
-            <View style={styles.cameraIconContainer}>
-              <LinearGradient
-                colors={['#2C7BE5', '#38BFA7']}
-                style={styles.cameraGradient}
-              >
-                <Ionicons name="camera" size={18} color="#fff" />
-              </LinearGradient>
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.changePhotoText}>Tap to change photo</Text>
-        </View>
-
-        <View style={styles.formSection}>
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Full Name <Text style={styles.requiredStar}>*</Text></Text>
-            <View style={[styles.inputContainer, formErrors.name ? styles.inputError : null]}>
-              <Ionicons name="person-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                value={form.name}
-                onChangeText={(text) => {
-                  setForm(prev => ({...prev, name: text}));
-                  if (formErrors.name) {
-                    setFormErrors(prev => ({...prev, name: ''}));
-                  }
-                }}
-                placeholder="Enter your full name"
-                placeholderTextColor="#6d88b7"
-              />
-            </View>
-            {formErrors.name ? <Text style={styles.errorText}>{formErrors.name}</Text> : null}
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Email Address <Text style={styles.requiredStar}>*</Text></Text>
-            <View style={[styles.inputContainer, formErrors.email ? styles.inputError : null]}>
-              <Ionicons name="mail-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                value={form.email}
-                onChangeText={(text) => {
-                  setForm(prev => ({...prev, email: text}));
-                  if (formErrors.email) {
-                    setFormErrors(prev => ({...prev, email: ''}));
-                  }
-                }}
-                placeholder="Enter your email"
-                placeholderTextColor="#6d88b7"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-            {formErrors.email ? <Text style={styles.errorText}>{formErrors.email}</Text> : null}
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Phone Number <Text style={styles.requiredStar}>*</Text></Text>
-            <View style={[styles.inputContainer, styles.readOnlyField]}>
-              <Ionicons name="call-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-              <TextInput
-                style={[styles.input, styles.readOnlyInput]}
-                value={form.phone}
-                editable={false}
-                placeholder="Phone number"
-                placeholderTextColor="#6d88b7"
-                keyboardType="phone-pad"
-              />
-              <View style={styles.lockedIndicator}>
-                <Ionicons name="lock-closed" size={16} color="#6d88b7" />
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Gender</Text>
-            <TouchableOpacity 
-              style={styles.inputContainer}
-              onPress={() => setShowGenderPicker(true)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="male-female-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-              <Text style={[styles.pickerText, !form.gender && styles.placeholderText]}>
-                {form.gender || 'Select gender'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#a0c0ff" style={styles.chevronIcon} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Date of Birth</Text>
-            <TouchableOpacity 
-              style={styles.inputContainer}
-              onPress={() => setShowDatePicker(true)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="calendar-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-              <Text style={[styles.pickerText, !form.dob && styles.placeholderText]}>
-                {form.dob || 'Select date of birth'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#a0c0ff" style={styles.chevronIcon} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Blood Group</Text>
-            <TouchableOpacity 
-              style={styles.inputContainer}
-              onPress={() => setShowBloodGroupPicker(true)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="water-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-              <Text style={[styles.pickerText, !form.blood_group && styles.placeholderText]}>
-                {form.blood_group || 'Select blood group'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#a0c0ff" style={styles.chevronIcon} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.formGroup, styles.halfWidth]}>
-              <Text style={styles.label}>Height</Text>
-              <View style={[styles.inputContainer, formErrors.height ? styles.inputError : null]}>
-                <Ionicons name="resize-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={form.height}
-                  onChangeText={(text) => {
-                    // Only allow numbers
-                    const numericText = text.replace(/[^0-9.]/g, '');
-                    setForm(prev => ({...prev, height: numericText}));
-                    if (formErrors.height) {
-                      setFormErrors(prev => ({...prev, height: ''}));
-                    }
-                  }}
-                  placeholder="170"
-                  placeholderTextColor="#6d88b7"
-                  keyboardType="numeric"
+        <ScrollView 
+          style={styles.scrollContainer} 
+          contentContainerStyle={{
+            paddingBottom: Math.max(insets.bottom + 120, 140) // Extra padding for keyboard
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+        >
+          <View style={styles.profileImageSection}>
+            <TouchableOpacity onPress={pickImage} style={styles.imageContainer} activeOpacity={0.8}>
+              {image ? (
+                <Image 
+                  source={{ uri: image }} 
+                  style={styles.profileImage}
+                  resizeMode="cover"
                 />
-                <Text style={styles.unitText}>cm</Text>
-              </View>
-              {formErrors.height ? <Text style={styles.errorText}>{formErrors.height}</Text> : null}
-            </View>
-
-            <View style={[styles.formGroup, styles.halfWidth]}>
-              <Text style={styles.label}>Weight</Text>
-              <View style={[styles.inputContainer, formErrors.weight ? styles.inputError : null]}>
-                <Ionicons name="scale-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  value={form.weight}
-                  onChangeText={(text) => {
-                    // Only allow numbers
-                    const numericText = text.replace(/[^0-9.]/g, '');
-                    setForm(prev => ({...prev, weight: numericText}));
-                    if (formErrors.weight) {
-                      setFormErrors(prev => ({...prev, weight: ''}));
-                    }
-                  }}
-                  placeholder="70"
-                  placeholderTextColor="#6d88b7"
-                  keyboardType="numeric"
+              ) : form.profile_photo ? (
+                <Image 
+                  source={{ uri: getFullImageUrl(form.profile_photo) }} 
+                  style={styles.profileImage}
+                  resizeMode="cover"
                 />
-                <Text style={styles.unitText}>kg</Text>
-              </View>
-              {formErrors.weight ? <Text style={styles.errorText}>{formErrors.weight}</Text> : null}
-            </View>
-          </View>
-
-          <LinearGradient
-            colors={['#2C7BE5', '#38BFA7']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveButtonGradient}
-          >
-            <TouchableOpacity 
-              style={styles.saveButton}
-              onPress={handleSave}
-              disabled={isLoading}
-              activeOpacity={0.8}
-            >
-              {isLoading ? (
-                <View style={styles.loadingButtonContainer}>
-                  <ActivityIndicator color="#fff" size="small" style={{marginRight: 8}} />
-                  <Text style={styles.saveButtonText}>Updating...</Text>
-                </View>
               ) : (
-                <Text style={styles.saveButtonText}>Update Profile</Text>
+                <LinearGradient
+                  colors={['#2C7BE5', '#38BFA7']}
+                  style={styles.placeholderImage}
+                >
+                  <Ionicons name="person" size={40} color="#fff" />
+                </LinearGradient>
               )}
+              <View style={styles.cameraIconContainer}>
+                <LinearGradient
+                  colors={['#2C7BE5', '#38BFA7']}
+                  style={styles.cameraGradient}
+                >
+                  <Ionicons name="camera" size={18} color="#fff" />
+                </LinearGradient>
+              </View>
             </TouchableOpacity>
-          </LinearGradient>
-        </View>
-      </ScrollView>
+            <Text style={styles.changePhotoText}>Tap to change photo</Text>
+          </View>
+
+          <View style={styles.formSection}>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Full Name <Text style={styles.requiredStar}>*</Text></Text>
+              <View style={[styles.inputContainer, formErrors.name ? styles.inputError : null]}>
+                <Ionicons name="person-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={form.name}
+                  onChangeText={(text) => {
+                    setForm(prev => ({...prev, name: text}));
+                    if (formErrors.name) {
+                      setFormErrors(prev => ({...prev, name: ''}));
+                    }
+                  }}
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#6d88b7"
+                />
+              </View>
+              {formErrors.name ? <Text style={styles.errorText}>{formErrors.name}</Text> : null}
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Email Address <Text style={styles.requiredStar}>*</Text></Text>
+              <View style={[styles.inputContainer, formErrors.email ? styles.inputError : null]}>
+                <Ionicons name="mail-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={form.email}
+                  onChangeText={(text) => {
+                    setForm(prev => ({...prev, email: text}));
+                    if (formErrors.email) {
+                      setFormErrors(prev => ({...prev, email: ''}));
+                    }
+                  }}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#6d88b7"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+              {formErrors.email ? <Text style={styles.errorText}>{formErrors.email}</Text> : null}
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Phone Number <Text style={styles.requiredStar}>*</Text></Text>
+              <View style={[styles.inputContainer, styles.readOnlyField]}>
+                <Ionicons name="call-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, styles.readOnlyInput]}
+                  value={form.phone}
+                  editable={false}
+                  placeholder="Phone number"
+                  placeholderTextColor="#6d88b7"
+                  keyboardType="phone-pad"
+                />
+                <View style={styles.lockedIndicator}>
+                  <Ionicons name="lock-closed" size={16} color="#6d88b7" />
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Gender</Text>
+              <TouchableOpacity 
+                style={styles.inputContainer}
+                onPress={() => setShowGenderPicker(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="male-female-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                <Text style={[styles.pickerText, !form.gender && styles.placeholderText]}>
+                  {form.gender || 'Select gender'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#a0c0ff" style={styles.chevronIcon} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Date of Birth</Text>
+              <TouchableOpacity 
+                style={styles.inputContainer}
+                onPress={() => setShowDatePicker(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                <Text style={[styles.pickerText, !form.dob && styles.placeholderText]}>
+                  {form.dob || 'Select date of birth'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#a0c0ff" style={styles.chevronIcon} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Blood Group</Text>
+              <TouchableOpacity 
+                style={styles.inputContainer}
+                onPress={() => setShowBloodGroupPicker(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="water-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                <Text style={[styles.pickerText, !form.blood_group && styles.placeholderText]}>
+                  {form.blood_group || 'Select blood group'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#a0c0ff" style={styles.chevronIcon} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.formGroup, styles.halfWidth]}>
+                <Text style={styles.label}>Height</Text>
+                <View style={[styles.inputContainer, formErrors.height ? styles.inputError : null]}>
+                  <Ionicons name="resize-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={form.height}
+                    onChangeText={(text) => {
+                      // Only allow numbers
+                      const numericText = text.replace(/[^0-9.]/g, '');
+                      setForm(prev => ({...prev, height: numericText}));
+                      if (formErrors.height) {
+                        setFormErrors(prev => ({...prev, height: ''}));
+                      }
+                    }}
+                    placeholder="170"
+                    placeholderTextColor="#6d88b7"
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.unitText}>cm</Text>
+                </View>
+                {formErrors.height ? <Text style={styles.errorText}>{formErrors.height}</Text> : null}
+              </View>
+
+              <View style={[styles.formGroup, styles.halfWidth]}>
+                <Text style={styles.label}>Weight</Text>
+                <View style={[styles.inputContainer, formErrors.weight ? styles.inputError : null]}>
+                  <Ionicons name="scale-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={form.weight}
+                    onChangeText={(text) => {
+                      // Only allow numbers
+                      const numericText = text.replace(/[^0-9.]/g, '');
+                      setForm(prev => ({...prev, weight: numericText}));
+                      if (formErrors.weight) {
+                        setFormErrors(prev => ({...prev, weight: ''}));
+                      }
+                    }}
+                    placeholder="70"
+                    placeholderTextColor="#6d88b7"
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.unitText}>kg</Text>
+                </View>
+                {formErrors.weight ? <Text style={styles.errorText}>{formErrors.weight}</Text> : null}
+              </View>
+            </View>
+
+            <LinearGradient
+              colors={['#2C7BE5', '#38BFA7']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.saveButtonGradient}
+            >
+              <TouchableOpacity 
+                style={styles.saveButton}
+                onPress={handleSave}
+                disabled={isLoading}
+                activeOpacity={0.8}
+              >
+                {isLoading ? (
+                  <View style={styles.loadingButtonContainer}>
+                    <ActivityIndicator color="#fff" size="small" style={{marginRight: 8}} />
+                    <Text style={styles.saveButtonText}>Updating...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.saveButtonText}>Update Profile</Text>
+                )}
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Date Picker */}
       {showDatePicker && Platform.OS === 'android' && (
@@ -782,6 +790,9 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,

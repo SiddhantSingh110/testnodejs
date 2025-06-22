@@ -161,7 +161,7 @@ export const DashboardScreen = memo(({
             <View style={styles.metricsGrid}>
               <HealthMetricCard
                 metric={{
-                  type: 'Heart Rate',
+                  type: 'Heart Rate (Sample)',
                   value: '72',
                   unit: 'bpm',
                   date: '2023-04-20',
@@ -171,7 +171,7 @@ export const DashboardScreen = memo(({
               />
               <HealthMetricCard
                 metric={{
-                  type: 'Blood Pressure',
+                  type: 'Blood Pressure (Sample)',
                   value: '120/80',
                   unit: 'mmHg',
                   date: '2023-04-19',

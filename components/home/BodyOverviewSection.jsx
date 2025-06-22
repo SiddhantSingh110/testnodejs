@@ -1,8 +1,6 @@
 // components/home/BodyOverviewSection.jsx
 import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { styles } from '../../styles/homescreen/HomeScreen.styles';
 
 export const BodyOverviewSection = memo(({ healthOverview }) => {
@@ -35,20 +33,6 @@ export const BodyOverviewSection = memo(({ healthOverview }) => {
               <Text style={styles.bodyStatLabel}>Health Insights</Text>
             </View>
           </View>
-
-          {/* Encouragement Text for New Users */}
-          {healthOverview.isNewUser && healthOverview.encouragementText && (
-            <View style={styles.encouragementContainer}>
-              <Text style={styles.encouragementText}>{healthOverview.encouragementText}</Text>
-              <TouchableOpacity 
-                style={styles.getStartedButton}
-                onPress={() => router.push('/tabs/upload')}
-              >
-                <Ionicons name="add-circle" size={16} color="#38BFA7" />
-                <Text style={styles.getStartedButtonText}>Get Started</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </View>
     </View>
