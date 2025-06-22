@@ -36,6 +36,61 @@ api.interceptors.response.use(
   }
 );
 
+// 🚀 NEW: Unified OTP Authentication Functions
+
+export const sendOtp = async (contact) => {
+  try {
+    console.log('Sending OTP to:', contact);
+    const response = await api.post('/send-otp', contact);
+    return response.data;
+  } catch (error) {
+    console.error('Send OTP failed:', error.message);
+    if (error.response) {
+      throw error.response.data || { message: 'Server error' };
+    } else if (error.request) {
+      throw { message: 'Network error - no response from server' };
+    } else {
+      throw { message: 'Network error' };
+    }
+  }
+};
+
+export const verifyOtp = async (otpData) => {
+  try {
+    console.log('Verifying OTP:', otpData);
+    const response = await api.post('/verify-otp', otpData);
+    return response.data;
+  } catch (error) {
+    console.error('OTP verification failed:', error.message);
+    if (error.response) {
+      throw error.response.data || { message: 'Server error' };
+    } else if (error.request) {
+      throw { message: 'Network error - no response from server' };
+    } else {
+      throw { message: 'Network error' };
+    }
+  }
+};
+
+export const completeProfile = async (profileData, token) => {
+  try {
+    console.log('Completing profile:', profileData);
+    const response = await api.post('/complete-profile', profileData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Profile completion failed:', error.message);
+    if (error.response) {
+      throw error.response.data || { message: 'Server error' };
+    } else {
+      throw { message: 'Network error' };
+    }
+  }
+};
+
+// 📧 Legacy: Existing Authentication Functions
+
 export const loginPatient = async (phone, password) => {
   try {
     console.log('Attempting to login with phone:', phone);

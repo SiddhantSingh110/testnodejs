@@ -18,7 +18,7 @@ import ENV from '../../../config/environment';
 export default function EditProfile() {
   const { token, updateUserInfo, refreshUserProfile } = useAuth();
   const router = useRouter();
-  const insets = useSafeAreaInsets(); // Get safe area insets
+  const insets = useSafeAreaInsets();
 
   const [form, setForm] = useState({
     name: '',
@@ -43,7 +43,11 @@ export default function EditProfile() {
   const [formErrors, setFormErrors] = useState({});
 
   const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-  const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
+  const GENDER_OPTIONS = [
+    { value: 'Male', icon: 'man-outline' },
+    { value: 'Female', icon: 'woman-outline' },
+    { value: 'Other', icon: 'transgender-outline' }
+  ];
 
   // Helper function for getting full image URL from relative path
   const getFullImageUrl = (relativePath) => {
@@ -89,10 +93,8 @@ export default function EditProfile() {
         }
       }
       
-      // Update the image state with the full URL if profile_photo exists
       if (profileData.profile_photo) {
         const fullImageUrl = getFullImageUrl(profileData.profile_photo);
-        //console.log('Setting image URL:', fullImageUrl);
         setImage(fullImageUrl);
       }
     } catch (error) {
@@ -127,7 +129,7 @@ export default function EditProfile() {
       }
   
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'Images', // Updated from ImagePicker.MediaTypeOptions.Images
+        mediaTypes: 'Images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -136,7 +138,6 @@ export default function EditProfile() {
       });
   
       if (!result.canceled && result.assets && result.assets[0]) {
-        // Verify the image exists
         try {
           const imgUri = result.assets[0].uri;
           const fileInfo = await FileSystem.getInfoAsync(imgUri);
@@ -145,7 +146,6 @@ export default function EditProfile() {
             throw new Error('Selected image file does not exist');
           }
           
-          // Check file size (limit to 10MB)
           if (fileInfo.size > 10 * 1024 * 1024) {
             Alert.alert("File too large", "Please select an image smaller than 10MB");
             return;
@@ -183,18 +183,20 @@ export default function EditProfile() {
       errors.name = 'Name is required (min 2 characters)';
     }
     
-    // Validate email (if provided)
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) {
+    // Validate email - now mandatory
+    if (!form.email || form.email.trim().length === 0) {
+      errors.email = 'Email is required';
+    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
       errors.email = 'Please enter a valid email address';
     }
     
     // Validate height and weight (if provided)
-    if (form.height && (isNaN(form.height) || form.height <= 0)) {
-      errors.height = 'Please enter a valid height';
+    if (form.height && (isNaN(form.height) || form.height <= 0 || form.height > 300)) {
+      errors.height = 'Please enter a valid height (1-300 cm)';
     }
     
-    if (form.weight && (isNaN(form.weight) || form.weight <= 0)) {
-      errors.weight = 'Please enter a valid weight';
+    if (form.weight && (isNaN(form.weight) || form.weight <= 0 || form.weight > 500)) {
+      errors.weight = 'Please enter a valid weight (1-500 kg)';
     }
     
     setFormErrors(errors);
@@ -203,7 +205,6 @@ export default function EditProfile() {
 
   const handleSave = async () => {
     if (!validateForm()) {
-        // Display error message for invalid form
         const errorMessage = Object.values(formErrors).join('\n');
         Alert.alert('Validation Error', errorMessage);
         return;
@@ -212,13 +213,11 @@ export default function EditProfile() {
     try {
         setIsLoading(true);
         
-        // Create a FormData object for file upload
         const formData = new FormData();
     
-        // Only append non-empty values
         if (form.name) formData.append('name', form.name.trim());
         if (form.email) formData.append('email', form.email.trim());
-        if (form.gender) formData.append('gender', form.gender.toLowerCase()); // Ensure gender is lowercase
+        if (form.gender) formData.append('gender', form.gender.toLowerCase());
         if (form.dob) formData.append('dob', form.dob);
         if (form.height) formData.append('height', form.height);
         if (form.weight) formData.append('weight', form.weight);
@@ -229,23 +228,15 @@ export default function EditProfile() {
         if (image && image !== getFullImageUrl(form.profile_photo)) {
           hasImageChanged = true;
           try {
-            // Check file size first
             const fileInfo = await FileSystem.getInfoAsync(image);
             if (fileInfo.exists) {
-              //(`Original image size: ${(fileInfo.size / 1024 / 1024).toFixed(2)}MB`);
-              
-              // If larger than 1MB, resize the image
-              if (fileInfo.size > 1000000) { // 1MB
-                // Resize and compress the image
+              if (fileInfo.size > 1000000) {
                 const resizedImage = await ImageManipulator.manipulateAsync(
                   image,
-                  [{ resize: { width: 500 } }], // Resize to width 500px (height auto)
-                  { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // 70% quality
+                  [{ resize: { width: 500 } }],
+                  { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
                 );
                 
-                //console.log(`Resized image size: estimated to be much smaller`);
-                
-                // Now use the resized image instead
                 const fileName = `photo_${Date.now()}.jpg`;
                 formData.append('profile_photo', {
                   uri: Platform.OS === 'android' ? resizedImage.uri : resizedImage.uri.replace('file://', ''),
@@ -253,7 +244,6 @@ export default function EditProfile() {
                   type: 'image/jpeg',
                 });
               } else {
-                // Image is already reasonably sized
                 const fileName = `photo_${Date.now()}.jpg`;
                 formData.append('profile_photo', {
                   uri: Platform.OS === 'android' ? image : image.replace('file://', ''),
@@ -261,8 +251,6 @@ export default function EditProfile() {
                   type: 'image/jpeg',
                 });
               }
-              
-              //console.log('Added image to FormData');
             }
           } catch (error) {
             console.error('Image processing error:', error);
@@ -272,25 +260,19 @@ export default function EditProfile() {
             );
           }
         }
-        // For debugging - log what's in the formData
-        //console.log('FormData created with entries');
-    
+
         const response = await updatePatientProfile(formData, token);
         
-        // Update the global user state with the new data
         if (response && response.user) {
-          // If we have the updateUserInfo function, use it to update global user state
           if (typeof updateUserInfo === 'function') {
             updateUserInfo(response.user);
           }
         } else {
-          // If we didn't get back updated user data, refresh the user profile
           if (typeof refreshUserProfile === 'function') {
             await refreshUserProfile();
           }
         }
 
-        // Use a controlled navigation after successful update
         Alert.alert(
             'Success', 
             'Profile updated successfully!',
@@ -298,27 +280,21 @@ export default function EditProfile() {
                 {
                     text: 'OK',
                     onPress: () => {
-                        // Make sure we navigate correctly
-                        //console.log('Navigating back after successful update');
-                        router.back(); // This should go back to the profile page
+                        router.back();
                     }
                 }
             ],
-            { cancelable: false } // Prevent dismissing by tapping outside
+            { cancelable: false }
         );
     } catch (error) {
         console.error("Profile Update Error:", error);
         
-        // Handle different types of errors
         if (error.response && error.response.data && error.response.data.errors) {
-            // Validation errors from backend
             const errorMessages = Object.values(error.response.data.errors).flat().join('\n');
             Alert.alert('Validation Error', errorMessages);
         } else if (error.message && error.message.includes('Network')) {
-            // Network errors
             Alert.alert('Connection Error', 'Please check your internet connection and try again.');
         } else {
-            // General error
             Alert.alert('Error', error.response?.data?.message || error.message || 'Failed to update profile. Please try again later.');
         }
     } finally {
@@ -326,7 +302,8 @@ export default function EditProfile() {
     }
 };
 
-  const PickerModal = ({ visible, onClose, options, onSelect, title }) => (
+  // Enhanced Gender Picker Modal
+  const GenderPickerModal = ({ visible, onClose, options, onSelect, title }) => (
     <Modal
       visible={visible}
       transparent={true}
@@ -346,21 +323,94 @@ export default function EditProfile() {
                   <Ionicons name="close" size={24} color="#fff" />
                 </TouchableOpacity>
               </View>
-              <ScrollView style={styles.optionsContainer} showsVerticalScrollIndicator={false}>
+              <View style={styles.genderOptionsContainer}>
                 {options.map((option, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={styles.optionItem}
+                    style={[
+                      styles.genderOptionItem,
+                      form.gender === option.value && styles.selectedGenderOption
+                    ]}
+                    onPress={() => {
+                      onSelect(option.value);
+                      onClose();
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.genderOptionContent}>
+                      <Ionicons 
+                        name={option.icon} 
+                        size={28} 
+                        color={form.gender === option.value ? "#38BFA7" : "#a0c0ff"} 
+                      />
+                      <Text style={[
+                        styles.genderOptionText,
+                        form.gender === option.value && styles.selectedGenderText
+                      ]}>
+                        {option.value}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </LinearGradient>
+          </View>
+        </BlurView>
+      </View>
+    </Modal>
+  );
+
+  // Enhanced Blood Group Picker Modal
+  const BloodGroupPickerModal = ({ visible, onClose, options, onSelect, title }) => (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <BlurView intensity={10} style={styles.blurView} tint="dark">
+          <View style={styles.modalContent}>
+            <LinearGradient
+              colors={['#091429', '#0F2248', '#162F65']}
+              style={{borderRadius: 20, overflow: 'hidden'}}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{title}</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <Ionicons name="close" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.bloodGroupGrid}>
+                {options.map((option, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.bloodGroupItem,
+                      form.blood_group === option && styles.selectedBloodGroup
+                    ]}
                     onPress={() => {
                       onSelect(option);
                       onClose();
                     }}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.optionText}>{option}</Text>
+                    <View style={styles.bloodGroupContent}>
+                      <Ionicons 
+                        name="water" 
+                        size={20} 
+                        color={form.blood_group === option ? "#38BFA7" : "#a0c0ff"} 
+                      />
+                      <Text style={[
+                        styles.bloodGroupText,
+                        form.blood_group === option && styles.selectedBloodGroupText
+                      ]}>
+                        {option}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
-              </ScrollView>
+              </View>
             </LinearGradient>
           </View>
         </BlurView>
@@ -418,11 +468,10 @@ export default function EditProfile() {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* Added contentContainerStyle with bottom padding to account for the tab bar */}
       <ScrollView 
         style={styles.scrollContainer} 
         contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom + 90, 100) // Add extra padding at the bottom
+          paddingBottom: Math.max(insets.bottom + 90, 100)
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -482,7 +531,7 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={styles.label}>Email Address <Text style={styles.requiredStar}>*</Text></Text>
             <View style={[styles.inputContainer, formErrors.email ? styles.inputError : null]}>
               <Ionicons name="mail-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
               <TextInput
@@ -504,7 +553,7 @@ export default function EditProfile() {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Phone Number</Text>
+            <Text style={styles.label}>Phone Number <Text style={styles.requiredStar}>*</Text></Text>
             <View style={[styles.inputContainer, styles.readOnlyField]}>
               <Ionicons name="call-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
               <TextInput
@@ -515,6 +564,9 @@ export default function EditProfile() {
                 placeholderTextColor="#6d88b7"
                 keyboardType="phone-pad"
               />
+              <View style={styles.lockedIndicator}>
+                <Ionicons name="lock-closed" size={16} color="#6d88b7" />
+              </View>
             </View>
           </View>
 
@@ -565,43 +617,49 @@ export default function EditProfile() {
 
           <View style={styles.row}>
             <View style={[styles.formGroup, styles.halfWidth]}>
-              <Text style={styles.label}>Height (cm)</Text>
+              <Text style={styles.label}>Height</Text>
               <View style={[styles.inputContainer, formErrors.height ? styles.inputError : null]}>
                 <Ionicons name="resize-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={form.height}
                   onChangeText={(text) => {
-                    setForm(prev => ({...prev, height: text}));
+                    // Only allow numbers
+                    const numericText = text.replace(/[^0-9.]/g, '');
+                    setForm(prev => ({...prev, height: numericText}));
                     if (formErrors.height) {
                       setFormErrors(prev => ({...prev, height: ''}));
                     }
                   }}
-                  placeholder="0"
+                  placeholder="170"
                   placeholderTextColor="#6d88b7"
                   keyboardType="numeric"
                 />
+                <Text style={styles.unitText}>cm</Text>
               </View>
               {formErrors.height ? <Text style={styles.errorText}>{formErrors.height}</Text> : null}
             </View>
 
             <View style={[styles.formGroup, styles.halfWidth]}>
-              <Text style={styles.label}>Weight (kg)</Text>
+              <Text style={styles.label}>Weight</Text>
               <View style={[styles.inputContainer, formErrors.weight ? styles.inputError : null]}>
                 <Ionicons name="scale-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={form.weight}
                   onChangeText={(text) => {
-                    setForm(prev => ({...prev, weight: text}));
+                    // Only allow numbers
+                    const numericText = text.replace(/[^0-9.]/g, '');
+                    setForm(prev => ({...prev, weight: numericText}));
                     if (formErrors.weight) {
                       setFormErrors(prev => ({...prev, weight: ''}));
                     }
                   }}
-                  placeholder="0"
+                  placeholder="70"
                   placeholderTextColor="#6d88b7"
                   keyboardType="numeric"
                 />
+                <Text style={styles.unitText}>kg</Text>
               </View>
               {formErrors.weight ? <Text style={styles.errorText}>{formErrors.weight}</Text> : null}
             </View>
@@ -692,8 +750,8 @@ export default function EditProfile() {
         </Modal>
       )}
 
-      {/* Gender Picker Modal */}
-      <PickerModal
+      {/* Enhanced Gender Picker Modal */}
+      <GenderPickerModal
         visible={showGenderPicker}
         onClose={() => setShowGenderPicker(false)}
         options={GENDER_OPTIONS}
@@ -701,8 +759,8 @@ export default function EditProfile() {
         title="Select Gender"
       />
 
-      {/* Blood Group Picker Modal */}
-      <PickerModal
+      {/* Enhanced Blood Group Picker Modal */}
+      <BloodGroupPickerModal
         visible={showBloodGroupPicker}
         onClose={() => setShowBloodGroupPicker(false)}
         options={BLOOD_GROUPS}
@@ -851,6 +909,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(160, 192, 255, 0.2)',
+    minHeight: 52,
   },
   inputError: {
     borderColor: '#FF5656',
@@ -877,6 +936,9 @@ const styles = StyleSheet.create({
   readOnlyInput: {
     color: '#A0C0FF',
   },
+  lockedIndicator: {
+    paddingRight: 12,
+  },
   pickerText: {
     flex: 1,
     color: '#FFFFFF',
@@ -887,6 +949,12 @@ const styles = StyleSheet.create({
     color: '#6d88b7',
   },
   chevronIcon: {
+    paddingRight: 12,
+  },
+  unitText: {
+    color: '#a0c0ff',
+    fontSize: 14,
+    fontWeight: '500',
     paddingRight: 12,
   },
   row: {
@@ -901,7 +969,7 @@ const styles = StyleSheet.create({
   saveButtonGradient: {
     borderRadius: 12,
     marginTop: 20,
-    marginBottom: 40, // Increased from the original
+    marginBottom: 40,
     overflow: 'hidden',
     elevation: 4,
     shadowColor: '#2C7BE5',
@@ -959,23 +1027,82 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
-  optionsContainer: {
-    padding: 16,
-    maxHeight: 300,
+  
+  // Enhanced Gender Picker Styles
+  genderOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 20,
   },
-  optionItem: {
-    padding: 16,
+  genderOptionItem: {
+    flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 16,
+    marginHorizontal: 6,
     borderWidth: 1,
     borderColor: 'rgba(160, 192, 255, 0.2)',
+    overflow: 'hidden',
+    minHeight: 80,
   },
-  optionText: {
+  selectedGenderOption: {
+    borderColor: '#38BFA7',
+    backgroundColor: 'rgba(56, 191, 167, 0.1)',
+  },
+  genderOptionContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+  },
+  genderOptionText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 8,
     textAlign: 'center',
   },
+  selectedGenderText: {
+    color: '#38BFA7',
+    fontWeight: '600',
+  },
+
+  // Enhanced Blood Group Picker Styles
+  bloodGroupGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 20,
+    justifyContent: 'space-between',
+  },
+  bloodGroupItem: {
+    width: '23%',
+    aspectRatio: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(160, 192, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedBloodGroup: {
+    borderColor: '#38BFA7',
+    backgroundColor: 'rgba(56, 191, 167, 0.1)',
+  },
+  bloodGroupContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bloodGroupText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  selectedBloodGroupText: {
+    color: '#38BFA7',
+  },
+
+  // Date Picker Styles
   datePickerContainer: {
     paddingVertical: 20,
     alignItems: 'center',

@@ -1,4 +1,4 @@
-// app/tabs/upload/index.jsx - Enhanced Upload Screen with Health Metrics Integration
+// app/tabs/upload/index.jsx - User-Friendly Upload Screen
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
@@ -19,7 +19,7 @@ import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../hooks/useAuth';
 import api from '../../../api/auth';
-import healthMetricsAPI from '../../../services/HealthMetricsAPI'; // ✨ Add this import
+import healthMetricsAPI from '../../../services/HealthMetricsAPI';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -46,28 +46,28 @@ const ProgressBar = ({ progress }) => {
   );
 };
 
-// Health facts that display during processing
-const healthFacts = [
-  "Your heart beats about 115,000 times each day, pumping 2,000 gallons of blood.",
-  "The human brain processes images in just 13 milliseconds.",
-  "Your bones are stronger than steel, pound for pound.",
-  "The average adult takes over 20,000 breaths per day.",
-  "Your body has over 600 muscles, making up 40% of your body weight.",
-  "The acid in your stomach is strong enough to dissolve metal.",
-  "Every day, your kidneys filter about 120-150 quarts of blood.",
-  "Humans shed about 600,000 particles of skin every hour.",
-  "Your body contains enough iron to make a 3-inch nail.",
-  "If stretched out, your intestines would be about 25 feet long.",
-  "The human body contains enough fat to make 7 bars of soap.",
-  "Red blood cells travel through 60,000 miles of blood vessels in your body.",
-  "Your eyes can distinguish about 10 million different colors.",
-  "Eyelashes typically last 3 months before falling out.",
-  "Your lungs contain about 300 million tiny air sacs called alveoli.",
-  "The surface area of your lungs is roughly the same size as a tennis court.",
-  "Humans are the only species known to blush when embarrassed.",
-  "Your body has enough DNA to stretch from the sun to Pluto and back 17 times.",
-  "About 300 million cells die in your body every minute.",
-  "Nerve impulses can travel at speeds up to 268 mph."
+// Simple, relatable health tips for everyday users
+const healthTips = [
+  "Drinking 8 glasses of water daily helps keep your body healthy and energized.",
+  "Walking for just 30 minutes a day can improve your heart health significantly.",
+  "Getting 7-8 hours of sleep helps your body recover and stay strong.",
+  "Eating colorful fruits and vegetables gives your body important vitamins.",
+  "Taking deep breaths when stressed can help lower your blood pressure.",
+  "Washing your hands regularly is one of the best ways to stay healthy.",
+  "Smiling and laughing can actually boost your immune system naturally.",
+  "Regular check-ups help catch health issues early when they're easier to treat.",
+  "Staying active helps maintain strong bones and muscles as you age.",
+  "Eating breakfast gives your body energy to start the day right.",
+  "Stretching for a few minutes daily can help prevent back pain.",
+  "Limiting screen time before bed helps you sleep better at night.",
+  "Staying connected with friends and family is good for mental health.",
+  "Taking breaks during work helps reduce stress and improve focus.",
+  "Fresh air and sunlight provide vitamin D that strengthens your bones.",
+  "Cooking at home helps you control what goes into your meals.",
+  "Regular dental check-ups prevent small problems from becoming big ones.",
+  "Staying hydrated helps your skin look healthy and feel smooth.",
+  "Gentle exercise like yoga can help reduce stress and anxiety.",
+  "Keeping a health diary helps you track patterns and improvements."
 ];
 
 export default function UploadReportScreen() {
@@ -76,34 +76,32 @@ export default function UploadReportScreen() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentStatus, setCurrentStatus] = useState('');
-  const [currentFactIndex, setCurrentFactIndex] = useState(0);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [showPickerModal, setShowPickerModal] = useState(false);
   const [reportId, setReportId] = useState(null);
   const [compressionProgress, setCompressionProgress] = useState(0);
   const [showCompressionModal, setShowCompressionModal] = useState(false);
-  
-  // ✨ New state for health metrics integration
   const [healthMetricsExtracted, setHealthMetricsExtracted] = useState(null);
   const [showHealthMetricsModal, setShowHealthMetricsModal] = useState(false);
   
   const { token } = useAuth();
   const router = useRouter();
-  const factIntervalRef = useRef(null);
+  const tipIntervalRef = useRef(null);
 
-  // Processing status messages - Updated for OCR
+  // Simple, user-friendly status messages
   const statusMessages = [
-    "Preparing document...",
-    "Compressing image for optimal processing...",
-    "Uploading document...",
-    "Reading document...",
-    "Extracting text data with OCR...",
-    "Analyzing medical information...",
-    "Identifying key health indicators...",
-    "Processing with Webshark Health AI...",
-    "Generating personalized insights...",
-    "Creating health summary using Webshark Health AI...",
-    "Finalizing your report..."
+    "Getting your document ready...",
+    "Making your image clearer...",
+    "Uploading your report...",
+    "Reading your document...",
+    "Understanding the text in your report...",
+    "Looking for health information...",
+    "Finding important health details...",
+    "Webshark Health AI is analyzing your report...",
+    "Creating your personalized health insights...",
+    "Webshark Health AI is preparing your summary...",
+    "Almost done! Finishing up..."
   ];
 
   // Ask for permissions on mount
@@ -112,7 +110,7 @@ export default function UploadReportScreen() {
       // Notification permissions
       const { status: notificationStatus } = await Notifications.requestPermissionsAsync();
       if (notificationStatus !== 'granted') {
-        Alert.alert('Enable Notifications', 'Turn on notifications to get updates when your reports are analyzed.');
+        Alert.alert('Stay Updated', 'Turn on notifications to know when your reports are ready!');
       }
 
       // Camera permissions
@@ -134,8 +132,8 @@ export default function UploadReportScreen() {
   // Cleanup intervals on unmount
   useEffect(() => {
     return () => {
-      if (factIntervalRef.current) {
-        clearInterval(factIntervalRef.current);
+      if (tipIntervalRef.current) {
+        clearInterval(tipIntervalRef.current);
       }
     };
   }, []);
@@ -157,10 +155,9 @@ export default function UploadReportScreen() {
   }, [uploadComplete]);
 
   /**
-   * Compress image using Expo ImageManipulator
-   * Optimized for medical report processing
+   * Enhance image quality for better text reading
    */
-  const compressImage = async (imageUri) => {
+  const enhanceImage = async (imageUri) => {
     try {
       setShowCompressionModal(true);
       setCompressionProgress(0);
@@ -168,37 +165,36 @@ export default function UploadReportScreen() {
       // Step 1: Get image info
       setCompressionProgress(0.2);
       
-      // Step 2: Resize image maintaining aspect ratio
+      // Step 2: Improve image quality for text reading
       setCompressionProgress(0.4);
-      const resizedImage = await ImageManipulator.manipulateAsync(
+      const enhancedImage = await ImageManipulator.manipulateAsync(
         imageUri,
         [
           {
             resize: {
-              width: 1500, // Max width for good OCR quality
-              height: 1500, // Max height
+              width: 1500, // Good size for reading text
+              height: 1500,
             }
           }
         ],
         {
-          compress: 0.8, // 80% quality for good text readability
+          compress: 0.8, // Keep good quality for text reading
           format: ImageManipulator.SaveFormat.JPEG,
         }
       );
 
       setCompressionProgress(0.8);
 
-      // Step 3: Apply sharpening for better text recognition
-      const sharpened = await ImageManipulator.manipulateAsync(
-        resizedImage.uri,
+      // Step 3: Final optimization
+      const finalImage = await ImageManipulator.manipulateAsync(
+        enhancedImage.uri,
         [
-          // Enhance contrast for better OCR
           { 
             crop: { 
               originX: 0, 
               originY: 0, 
-              width: resizedImage.width, 
-              height: resizedImage.height 
+              width: enhancedImage.width, 
+              height: enhancedImage.height 
             } 
           }
         ],
@@ -210,24 +206,24 @@ export default function UploadReportScreen() {
 
       setCompressionProgress(1.0);
 
-      console.log('Image compression completed:', {
+      console.log('Image enhancement completed:', {
         original: imageUri,
-        compressed: sharpened.uri,
-        width: sharpened.width,
-        height: sharpened.height
+        enhanced: finalImage.uri,
+        width: finalImage.width,
+        height: finalImage.height
       });
 
-      // Hide compression modal after a brief delay
+      // Hide modal after a brief delay
       setTimeout(() => {
         setShowCompressionModal(false);
       }, 1000);
 
-      return sharpened;
+      return finalImage;
 
     } catch (error) {
       setShowCompressionModal(false);
-      console.error('Image compression failed:', error);
-      throw new Error('Failed to compress image: ' + error.message);
+      console.error('Image enhancement failed:', error);
+      throw new Error('Failed to enhance image: ' + error.message);
     }
   };
 
@@ -235,30 +231,30 @@ export default function UploadReportScreen() {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Camera access is required to take photos.');
+        Alert.alert('Camera Access Needed', 'We need camera access to take photos of your reports.');
         return;
       }
 
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        quality: 1.0, // High quality for initial capture
+        quality: 1.0,
       });
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
         
-        // Compress the image for medical report processing
-        const compressedImage = await compressImage(asset.uri);
+        // Enhance the image for better text reading
+        const enhancedImage = await enhanceImage(asset.uri);
         
         setFile({
-          uri: compressedImage.uri,
+          uri: enhancedImage.uri,
           name: `medical_report_${Date.now()}.jpg`,
           type: 'image/jpeg',
           size: asset.fileSize || 0,
-          compressed: true,
+          enhanced: true,
           originalSize: asset.fileSize || 0,
-          compressedSize: compressedImage.fileSize || 0
+          enhancedSize: enhancedImage.fileSize || 0
         });
         
         if (!title) {
@@ -267,7 +263,7 @@ export default function UploadReportScreen() {
         setShowPickerModal(false);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to take photo: ' + error.message);
+      Alert.alert('Photo Error', 'Could not take photo. Please try again.');
     }
   };
 
@@ -275,30 +271,30 @@ export default function UploadReportScreen() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Photo library access is required to select images.');
+        Alert.alert('Photo Access Needed', 'We need access to your photos to select report images.');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        quality: 1.0, // High quality for initial selection
+        quality: 1.0,
       });
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
         
-        // Compress the image for medical report processing
-        const compressedImage = await compressImage(asset.uri);
+        // Enhance the image for better text reading
+        const enhancedImage = await enhanceImage(asset.uri);
         
         setFile({
-          uri: compressedImage.uri,
+          uri: enhancedImage.uri,
           name: asset.fileName || `medical_report_${Date.now()}.jpg`,
           type: asset.type || 'image/jpeg',
           size: asset.fileSize || 0,
-          compressed: true,
+          enhanced: true,
           originalSize: asset.fileSize || 0,
-          compressedSize: compressedImage.fileSize || 0
+          enhancedSize: enhancedImage.fileSize || 0
         });
         
         if (!title) {
@@ -309,7 +305,7 @@ export default function UploadReportScreen() {
         setShowPickerModal(false);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick image: ' + error.message);
+      Alert.alert('Photo Error', 'Could not select photo. Please try again.');
     }
   };
 
@@ -323,25 +319,24 @@ export default function UploadReportScreen() {
       if (result?.assets?.length > 0 && result.assets[0].uri) {
         const asset = result.assets[0];
         
-        // Check if it's an image file that needs compression
+        // Check if it's an image file that needs enhancement
         if (asset.mimeType && asset.mimeType.startsWith('image/')) {
-          // Compress image files from document picker
-          const compressedImage = await compressImage(asset.uri);
+          const enhancedImage = await enhanceImage(asset.uri);
           
           setFile({
-            uri: compressedImage.uri,
-            name: asset.name || `compressed_${Date.now()}.jpg`,
+            uri: enhancedImage.uri,
+            name: asset.name || `enhanced_${Date.now()}.jpg`,
             type: 'image/jpeg',
             size: asset.size || 0,
-            compressed: true,
+            enhanced: true,
             originalSize: asset.size || 0,
-            compressedSize: compressedImage.fileSize || 0
+            enhancedSize: enhancedImage.fileSize || 0
           });
         } else {
-          // PDF files don't need compression
+          // PDF files don't need enhancement
           setFile({
             ...asset,
-            compressed: false
+            enhanced: false
           });
         }
         
@@ -353,7 +348,7 @@ export default function UploadReportScreen() {
         setShowPickerModal(false);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick file: ' + error.message);
+      Alert.alert('File Error', 'Could not select file. Please try again.');
     }
   };
 
@@ -361,21 +356,21 @@ export default function UploadReportScreen() {
     setShowPickerModal(true);
   };
 
-  const startFactRotation = () => {
-    if (factIntervalRef.current) {
-      clearInterval(factIntervalRef.current);
+  const startTipRotation = () => {
+    if (tipIntervalRef.current) {
+      clearInterval(tipIntervalRef.current);
     }
     
-    factIntervalRef.current = setInterval(() => {
-      setCurrentFactIndex(prevIndex => (prevIndex + 1) % healthFacts.length);
-    }, 6000);
+    tipIntervalRef.current = setInterval(() => {
+      setCurrentTipIndex(prevIndex => (prevIndex + 1) % healthTips.length);
+    }, 5000); // Show tips every 5 seconds
   };
 
   const simulateUploadProgress = () => {
     setUploadProgress(0);
     setCurrentStatus(statusMessages[0]);
-    setCurrentFactIndex(Math.floor(Math.random() * healthFacts.length));
-    startFactRotation();
+    setCurrentTipIndex(Math.floor(Math.random() * healthTips.length));
+    startTipRotation();
     
     const statusThresholds = statusMessages.map((_, index) => 
       (index / statusMessages.length) * 0.95
@@ -385,7 +380,7 @@ export default function UploadReportScreen() {
       setUploadProgress(prev => {
         let newProgress;
         if (prev < 0.95) {
-          const increment = Math.max(0.005, (0.95 - prev) / 35); // Slower for OCR processing
+          const increment = Math.max(0.005, (0.95 - prev) / 30);
           newProgress = prev + increment;
         } else {
           newProgress = prev;
@@ -400,26 +395,25 @@ export default function UploadReportScreen() {
         
         return newProgress;
       });
-    }, 400); // Slightly slower intervals for OCR
+    }, 400);
     
     return interval;
   };
 
-  // ✨ Enhanced handleUpload with health metrics integration
   const handleUpload = async () => {
     if (!file) {
-      Alert.alert('Please select a report file');
+      Alert.alert('Missing File', 'Please select a report file first');
       return;
     }
 
     if (!title.trim()) {
-      Alert.alert('Please enter a title for your report');
+      Alert.alert('Missing Title', 'Please enter a title for your report');
       return;
     }
 
     setUploading(true);
     setUploadComplete(false);
-    setHealthMetricsExtracted(null); // Reset health metrics state
+    setHealthMetricsExtracted(null);
     const progressInterval = simulateUploadProgress();
     
     const formData = new FormData();
@@ -441,13 +435,12 @@ export default function UploadReportScreen() {
         },
       });
 
-     // ✨ ADD THIS DEBUG LOG RIGHT HERE
       console.log('🔍 UPLOAD RESPONSE DEBUG:', JSON.stringify(response.data, null, 2));
 
       clearInterval(progressInterval);
       setUploadProgress(1);
       
-      // ✨ Enhanced: Process health metrics from upload response
+      // Process health information from upload response
       const uploadResult = await healthMetricsAPI.handleReportUploadComplete(response.data);
       
       if (uploadResult.shouldRefreshHealthScreen && uploadResult.metricsExtracted > 0) {
@@ -457,21 +450,21 @@ export default function UploadReportScreen() {
           metrics: uploadResult.extractedMetrics
         });
         
-        // Enhanced completion message for health metrics extraction
-        setCurrentStatus(`✨ Report processed! ${uploadResult.metricsExtracted} health metrics extracted ✨`);
+        // Enhanced completion message for health information extraction
+        setCurrentStatus(`✨ Report complete! Found ${uploadResult.metricsExtracted} health details ✨`);
         
-        // Show health metrics preview modal after upload
+        // Show health information preview modal after upload
         setTimeout(() => {
           setShowHealthMetricsModal(true);
         }, 2000);
       } else {
         // Standard completion message
         if (response.data?.file_type === 'image') {
-          const ocrStatus = response.data?.ocr_status;
-          if (ocrStatus === 'completed') {
-            setCurrentStatus("✨ OCR & AI Analysis Complete! ✨");
-          } else if (ocrStatus === 'failed') {
-            setCurrentStatus("📄 Report uploaded - OCR processing failed");
+          const textReadStatus = response.data?.ocr_status;
+          if (textReadStatus === 'completed') {
+            setCurrentStatus("✨ Webshark Health AI has read your report! ✨");
+          } else if (textReadStatus === 'failed') {
+            setCurrentStatus("📄 Report uploaded - Text reading in progress");
           } else {
             setCurrentStatus("📄 Report uploaded - Processing in background");
           }
@@ -483,21 +476,21 @@ export default function UploadReportScreen() {
       setUploadComplete(true);
       setUploading(false);
       
-      if (factIntervalRef.current) {
-        clearInterval(factIntervalRef.current);
+      if (tipIntervalRef.current) {
+        clearInterval(tipIntervalRef.current);
       }
 
-      // Enhanced notification
+      // User-friendly notification
       const notificationTitle = uploadResult.metricsExtracted > 0 
-        ? `📊 ${uploadResult.metricsExtracted} Health Metrics Extracted`
+        ? `📊 Found ${uploadResult.metricsExtracted} Health Details`
         : response.data?.file_type === 'image' 
-          ? '📊 Medical Image Processed'
+          ? '📊 Your Report is Ready'
           : '📊 Report Analysis Complete';
         
       const notificationBody = uploadResult.metricsExtracted > 0
-        ? `Your "${title}" report analysis found ${uploadResult.metricsExtracted} health metrics. Check your Health tab!`
+        ? `Great news! We found ${uploadResult.metricsExtracted} health details in your "${title}" report. Check your Health tab!`
         : response.data?.file_type === 'image'
-          ? `Your "${title}" image has been processed with OCR and AI analysis is ready.`
+          ? `Your "${title}" report has been read and analyzed. Tap to view your results!`
           : `Your "${title}" report has been processed and insights are ready to view.`;
 
       await Notifications.scheduleNotificationAsync({
@@ -515,16 +508,16 @@ export default function UploadReportScreen() {
 
       setReportId(response.data?.report_id);
 
-      // Log compression savings if applicable
-      if (file.compressed && file.originalSize && file.compressedSize) {
-        const savings = ((file.originalSize - file.compressedSize) / file.originalSize * 100).toFixed(1);
-        console.log(`Image compression saved ${savings}% file size`);
+      // Log enhancement savings if applicable
+      if (file.enhanced && file.originalSize && file.enhancedSize) {
+        const improvement = file.originalSize > file.enhancedSize ? 'optimized' : 'enhanced';
+        console.log(`Image ${improvement} for better text reading`);
       }
 
     } catch (error) {
       clearInterval(progressInterval);
-      if (factIntervalRef.current) {
-        clearInterval(factIntervalRef.current);
+      if (tipIntervalRef.current) {
+        clearInterval(tipIntervalRef.current);
       }
       setUploadProgress(0);
       setCurrentStatus("");
@@ -532,13 +525,12 @@ export default function UploadReportScreen() {
       
       Alert.alert(
         'Upload Failed', 
-        error?.response?.data?.message || 'Please check your connection and try again'
+        'Something went wrong. Please check your internet connection and try again.'
       );
       console.error('Upload error', error);
     }
   };
 
-  // ✨ New: Handle health metrics modal actions
   const handleViewHealthMetrics = () => {
     setShowHealthMetricsModal(false);
     router.push('/tabs/health');
@@ -565,7 +557,7 @@ export default function UploadReportScreen() {
     setShowHealthMetricsModal(false);
   };
 
-  // ✨ New: Health Metrics Preview Modal
+  // Health Information Preview Modal
   const renderHealthMetricsModal = () => {
     if (!healthMetricsExtracted) return null;
 
@@ -585,12 +577,12 @@ export default function UploadReportScreen() {
               <View style={styles.modalHeader}>
                 <View style={styles.modalHeaderContent}>
                   <View style={styles.modalHeaderIcon}>
-                    <Ionicons name="analytics" size={24} color="#38BFA7" />
+                    <Ionicons name="checkmark-circle" size={24} color="#38BFA7" />
                   </View>
                   <View>
-                    <Text style={styles.modalTitle}>Health Metrics Extracted!</Text>
+                    <Text style={styles.modalTitle}>Health Information Found!</Text>
                     <Text style={styles.modalSubtitle}>
-                      {healthMetricsExtracted.count} metrics found in your report
+                      We found {healthMetricsExtracted.count} health details in your report
                     </Text>
                   </View>
                 </View>
@@ -604,19 +596,19 @@ export default function UploadReportScreen() {
 
               <ScrollView style={styles.modalBody}>
                 <Text style={styles.modalDescription}>
-                  Great! We've automatically extracted health metrics from your report. 
-                  You can view them in your Health tab or continue to the report details.
+                  Excellent! Webshark Health AI automatically found important health information in your report. 
+                  You can see all the details in your Health section.
                 </Text>
 
                 {/* Categories found */}
                 {healthMetricsExtracted.categories.length > 0 && (
                   <View style={styles.categoriesContainer}>
-                    <Text style={styles.categoriesTitle}>Categories Found:</Text>
+                    <Text style={styles.categoriesTitle}>What We Found:</Text>
                     <View style={styles.categoriesList}>
                       {healthMetricsExtracted.categories.map((category, index) => (
                         <View key={index} style={styles.categoryChip}>
                           <Text style={styles.categoryChipText}>
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                            {category.charAt(0).toUpperCase() + category.slice(1)} Tests
                           </Text>
                         </View>
                       ))}
@@ -624,12 +616,12 @@ export default function UploadReportScreen() {
                   </View>
                 )}
 
-                {/* Sample metrics preview */}
+                {/* Sample health information preview */}
                 {healthMetricsExtracted.metrics.slice(0, 3).map((metric, index) => (
                   <View key={index} style={styles.metricPreviewItem}>
                     <View style={styles.metricPreviewLeft}>
                       <Text style={styles.metricName}>{metric.display_name}</Text>
-                      <Text style={styles.metricSource}>From Medical Report</Text>
+                      <Text style={styles.metricSource}>From Your Report</Text>
                     </View>
                     <View style={styles.metricPreviewRight}>
                       <Text style={styles.metricValue}>
@@ -644,7 +636,7 @@ export default function UploadReportScreen() {
                       ]}>
                         <Text style={styles.metricStatusText}>
                           {metric.status === 'normal' ? 'Normal' : 
-                           metric.status === 'borderline' ? 'Borderline' : 'Attention'}
+                           metric.status === 'borderline' ? 'Watch' : 'Check'}
                         </Text>
                       </View>
                     </View>
@@ -653,7 +645,7 @@ export default function UploadReportScreen() {
 
                 {healthMetricsExtracted.count > 3 && (
                   <Text style={styles.moreMetricsText}>
-                    +{healthMetricsExtracted.count - 3} more metrics available
+                    +{healthMetricsExtracted.count - 3} more health details found
                   </Text>
                 )}
               </ScrollView>
@@ -670,8 +662,8 @@ export default function UploadReportScreen() {
                   style={[styles.modalButton, styles.modalButtonPrimary]}
                   onPress={handleViewHealthMetrics}
                 >
-                  <Ionicons name="analytics" size={16} color="#fff" />
-                  <Text style={styles.modalButtonText}>View Health Metrics</Text>
+                  <Ionicons name="heart" size={16} color="#fff" />
+                  <Text style={styles.modalButtonText}>See Health Details</Text>
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -698,14 +690,14 @@ export default function UploadReportScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Upload Report</Text>
+          <Text style={styles.headerTitle}>Add Medical Report</Text>
         </View>
 
         <View style={styles.formContainer}>
-          <Text style={styles.label}>Report Title</Text>
+          <Text style={styles.label}>Report Name</Text>
           <View style={styles.inputContainer}>
             <TextInput
-              placeholder="Enter a title for your report"
+              placeholder="Give your report a name (e.g., Blood Test Results)"
               placeholderTextColor="#6d88b7"
               value={title}
               onChangeText={setTitle}
@@ -735,10 +727,10 @@ export default function UploadReportScreen() {
                     {file.name}
                   </Text>
                   <Text style={styles.fileSize}>
-                    {file.size ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' : 'Unknown size'}
-                    {file.compressed && (
+                    {file.size ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' : 'File size unknown'}
+                    {file.enhanced && (
                       <Text style={{ color: '#38BFA7', fontSize: 12 }}>
-                        {' • Optimized for OCR'}
+                        {' • Enhanced for text reading'}
                       </Text>
                     )}
                   </Text>
@@ -755,9 +747,9 @@ export default function UploadReportScreen() {
               </View>
             ) : (
               <View style={styles.chooserContainer}>
-                <Ionicons name="cloud-upload-outline" size={36} color="#a0c0ff" />
-                <Text style={styles.chooserText}>Upload Your Report</Text>
-                <Text style={styles.chooserSubtext}>Camera, Gallery, or Files • OCR Enabled</Text>
+                <Ionicons name="add-circle-outline" size={36} color="#a0c0ff" />
+                <Text style={styles.chooserText}>Add Your Medical Report</Text>
+                <Text style={styles.chooserSubtext}>Take Photo • Gallery • Document</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -777,9 +769,9 @@ export default function UploadReportScreen() {
               </Text>
               
               <View style={styles.factContainer}>
-                <Text style={styles.factTitle}>Did you know?</Text>
+                <Text style={styles.factTitle}>Health Tip 💡</Text>
                 <Text style={styles.factText}>
-                  {healthFacts[currentFactIndex]}
+                  {healthTips[currentTipIndex]}
                 </Text>
               </View>
             </View>
@@ -800,7 +792,7 @@ export default function UploadReportScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={styles.uploadButtonText}>
-                    Check Report
+                    View My Report
                   </Text>
                 </TouchableOpacity>
               </LinearGradient>
@@ -811,9 +803,9 @@ export default function UploadReportScreen() {
                 activeOpacity={0.8}
               >
                 <View style={styles.secondaryButtonContent}>
-                  <Ionicons name="cloud-upload-outline" size={18} color="#a0c0ff" />
+                  <Ionicons name="add-circle-outline" size={18} color="#a0c0ff" />
                   <Text style={styles.secondaryButtonText}>
-                    Upload New Report
+                    Add Another Report
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -837,7 +829,7 @@ export default function UploadReportScreen() {
                 {uploading ? (
                   <View style={styles.loadingButtonContent}>
                     <Text style={styles.uploadButtonText}>
-                      Processing...
+                      Reading Report...
                     </Text>
                   </View>
                 ) : (
@@ -853,19 +845,19 @@ export default function UploadReportScreen() {
             <View style={styles.helpTextContainer}>
               <Ionicons name="information-circle-outline" size={20} color="#a0c0ff" style={styles.helpIcon} />
               <Text style={styles.helpText}>
-                Upload your medical reports, prescriptions, or lab results. 
-                Take a photo, select from gallery, or choose files. 
-                Images are automatically optimized for OCR text extraction and AI analysis.
+                Add your medical reports and lab results. 
+                Take a photo or select a document. 
+                Webshark Health AI will read your report and find important health information.
               </Text>
             </View>
           )}
         </View>
       </ScrollView>
 
-      {/* ✨ Add the new health metrics modal */}
+      {/* Health Information Modal */}
       {renderHealthMetricsModal()}
 
-      {/* Image Compression Modal */}
+      {/* Image Enhancement Modal */}
       <Modal
         visible={showCompressionModal}
         transparent={true}
@@ -877,8 +869,8 @@ export default function UploadReportScreen() {
               colors={['#091429', '#0F2248']}
               style={styles.compressionModalContent}
             >
-              <Text style={styles.compressionModalTitle}>Optimizing Image</Text>
-              <Text style={styles.compressionModalSubtitle}>Preparing for OCR processing...</Text>
+              <Text style={styles.compressionModalTitle}>Preparing Your Image</Text>
+              <Text style={styles.compressionModalSubtitle}>Making it easier to read...</Text>
               
               <View style={styles.compressionProgressContainer}>
                 <View style={styles.compressionProgressBar}>

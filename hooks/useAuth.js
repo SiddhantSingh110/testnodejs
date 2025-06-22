@@ -1,7 +1,7 @@
 // hooks/useAuth.js
 import { useState, useEffect, createContext, useContext } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { loginPatient, registerPatient, fetchPatientProfile } from '../api/auth';
+import { loginPatient, registerPatient, fetchPatientProfile, sendOtp, verifyOtp, completeProfile } from '../api/auth';
 
 const AuthContext = createContext(null);
 
@@ -31,6 +31,69 @@ export function AuthProvider({ children }) {
     
     loadStoredData();
   }, []);
+
+  // 🚀 NEW: Unified OTP Authentication Functions
+
+  const sendOtpCode = async (contact) => {
+    try {
+      const response = await sendOtp(contact);
+      return response;
+    } catch (error) {
+      console.error('Send OTP error', error);
+      throw error;
+    }
+  };
+
+  const verifyOtpCode = async (otpData) => {
+    try {
+      const response = await verifyOtp(otpData);
+      
+      if (response.success && response.token) {
+        // Store token
+        await SecureStore.setItemAsync('userToken', response.token);
+        
+        // Update state
+        setToken(response.token);
+        setUser(response.user);
+        
+        return {
+          success: true,
+          isNewUser: response.is_new_user,
+          profileIncomplete: response.profile_incomplete,
+          user: response.user,
+          message: response.message
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('OTP verification error', error);
+      throw error;
+    }
+  };
+
+  const completeUserProfile = async (profileData) => {
+    try {
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
+      const response = await completeProfile(profileData, token);
+      
+      if (response.success) {
+        // Update user state with completed profile
+        setUser(response.user);
+        return response;
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Profile completion error', error);
+      throw error;
+    }
+  };
+
+  // 📧 Legacy: Traditional Authentication Functions
 
   const signIn = async (phone, password) => {
     try {
@@ -111,12 +174,17 @@ export function AuthProvider({ children }) {
         user, 
         token, 
         loading, 
+        // Legacy functions
         signIn, 
         signUp, 
         signOut, 
         updateUserInfo,
         refreshUserProfile,
-        isAuthenticated: !!token 
+        isAuthenticated: !!token,
+        // NEW: Unified OTP functions
+        sendOtpCode,
+        verifyOtpCode,
+        completeUserProfile
       }}
     >
       {children}
@@ -132,4 +200,4 @@ export function useAuth() {
   return context;
 }
 
-export default useAuth; 
+export default useAuth;

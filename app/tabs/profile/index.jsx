@@ -19,6 +19,85 @@ export default function Profile() {
     return `${ENV.apiUrl.replace('/api', '')}/storage/${relativePath}`;
   };
 
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return null;
+      
+      const options = { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric' 
+      };
+      return date.toLocaleDateString('en-GB', options);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Helper function to format phone number
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return null;
+    
+    // If phone starts with country code, format it nicely
+    if (phone.startsWith('+91')) {
+      return `+91 ${phone.slice(3)}`;
+    } else if (phone.startsWith('91') && phone.length === 12) {
+      return `+91 ${phone.slice(2)}`;
+    }
+    return phone;
+  };
+
+  // Helper function to capitalize text properly
+  const capitalizeText = (text) => {
+    if (!text) return null;
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  };
+
+  // Helper function to format height/weight display
+  const formatPhysicalStats = (height, weight) => {
+    const formattedHeight = height ? `${height} cm` : null;
+    const formattedWeight = weight ? `${weight} kg` : null;
+    
+    if (formattedHeight && formattedWeight) {
+      return `${formattedHeight} • ${formattedWeight}`;
+    } else if (formattedHeight) {
+      return formattedHeight;
+    } else if (formattedWeight) {
+      return formattedWeight;
+    }
+    return null;
+  };
+
+  // Helper function to truncate email if too long
+  const formatEmail = (email) => {
+    if (!email) return null;
+    if (email.length > 25) {
+      return `${email.substring(0, 22)}...`;
+    }
+    return email;
+  };
+
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    const fields = [
+      user?.name,
+      user?.email,
+      user?.phone,
+      user?.dob,
+      user?.gender,
+      user?.blood_group,
+      user?.height,
+      user?.weight
+    ];
+    
+    const completedFields = fields.filter(field => field && field.toString().trim() !== '').length;
+    return Math.round((completedFields / fields.length) * 100);
+  };
+
   const handleLogout = () => {
     Alert.alert(
       'Confirm Logout',
@@ -33,12 +112,14 @@ export default function Profile() {
           style: 'destructive',
           onPress: () => {
             signOut();
-            router.replace('/login');
+            router.replace('/');
           },
         },
       ]
     );
   };
+
+  const profileCompletion = calculateProfileCompletion();
 
   return (
     <>
@@ -76,12 +157,28 @@ export default function Profile() {
               </TouchableOpacity>
             </View>
             <Text style={styles.name}>{user?.name || 'User'}</Text>
-            <Text style={styles.phone}>{user?.phone || 'Phone not available'}</Text>
+            <Text style={styles.phone}>{formatPhoneNumber(user?.phone) || 'Phone not available'}</Text>
+            
+            {/* Profile Completion Indicator */}
+            <View style={styles.completionContainer}>
+              <View style={styles.completionBarBackground}>
+                <View 
+                  style={[
+                    styles.completionBarFill, 
+                    { width: `${profileCompletion}%` }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.completionText}>{profileCompletion}% Profile Complete</Text>
+            </View>
           </LinearGradient>
           
           <View style={styles.infoCard}>
             <View style={styles.infoHeader}>
-              <Text style={styles.infoTitle}>Personal Information</Text>
+              <View>
+                <Text style={styles.infoTitle}>Personal Information</Text>
+                <Text style={styles.infoSubtitle}>Keep your information up to date</Text>
+              </View>
               <TouchableOpacity 
                 style={styles.editButton} 
                 onPress={() => router.push('/tabs/profile/edit')}
@@ -95,45 +192,77 @@ export default function Profile() {
             <View style={styles.infoItem}>
               <Ionicons name="mail-outline" size={20} color="#a0c0ff" style={styles.infoIcon} />
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Email</Text>
-                <Text style={styles.infoValue}>{user?.email || 'Not provided'}</Text>
+                <Text style={styles.infoLabel}>Email Address</Text>
+                <Text style={styles.infoValue}>
+                  {formatEmail(user?.email) || <Text style={styles.missingValue}>Add your email</Text>}
+                </Text>
               </View>
+              {!user?.email && (
+                <View style={styles.incompleteBadge}>
+                  <Ionicons name="alert-circle" size={16} color="#FFC107" />
+                </View>
+              )}
             </View>
             
             <View style={styles.infoItem}>
               <Ionicons name="calendar-outline" size={20} color="#a0c0ff" style={styles.infoIcon} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Date of Birth</Text>
-                <Text style={styles.infoValue}>{user?.dob || 'Not provided'}</Text>
+                <Text style={styles.infoValue}>
+                  {formatDate(user?.dob) || <Text style={styles.missingValue}>Add your birth date</Text>}
+                </Text>
               </View>
+              {!user?.dob && (
+                <View style={styles.incompleteBadge}>
+                  <Ionicons name="alert-circle" size={16} color="#FFC107" />
+                </View>
+              )}
             </View>
             
             <View style={styles.infoItem}>
               <Ionicons name="transgender-outline" size={20} color="#a0c0ff" style={styles.infoIcon} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Gender</Text>
-                <Text style={styles.infoValue}>{user?.gender || 'Not provided'}</Text>
+                <Text style={styles.infoValue}>
+                  {capitalizeText(user?.gender) || <Text style={styles.missingValue}>Specify your gender</Text>}
+                </Text>
               </View>
+              {!user?.gender && (
+                <View style={styles.incompleteBadge}>
+                  <Ionicons name="alert-circle" size={16} color="#FFC107" />
+                </View>
+              )}
             </View>
 
             <View style={styles.infoItem}>
               <Ionicons name="water-outline" size={20} color="#a0c0ff" style={styles.infoIcon} />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Blood Group</Text>
-                <Text style={styles.infoValue}>{user?.blood_group || 'Not provided'}</Text>
+                <Text style={styles.infoValue}>
+                  {user?.blood_group || <Text style={styles.missingValue}>Add blood group</Text>}
+                </Text>
               </View>
+              {!user?.blood_group && (
+                <View style={styles.incompleteBadge}>
+                  <Ionicons name="alert-circle" size={16} color="#FFC107" />
+                </View>
+              )}
             </View>
 
             <View style={styles.infoItem}>
               <Ionicons name="resize-outline" size={20} color="#a0c0ff" style={styles.infoIcon} />
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Height/Weight</Text>
+                <Text style={styles.infoLabel}>Physical Stats</Text>
                 <Text style={styles.infoValue}>
-                  {user?.height ? `${user.height} cm` : 'Not provided'}
-                  {user?.height && user?.weight ? ' / ' : ''}
-                  {user?.weight ? `${user.weight} kg` : ''}
+                  {formatPhysicalStats(user?.height, user?.weight) || 
+                   <Text style={styles.missingValue}>Add height and weight</Text>}
                 </Text>
               </View>
+              {(!user?.height && !user?.weight) && (
+                <View style={styles.incompleteBadge}>
+                  <Ionicons name="alert-circle" size={16} color="#FFC107" />
+                </View>
+              )}
             </View>
           </View>
           
@@ -150,7 +279,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(44, 123, 229, 0.15)' }]}>
                 <Ionicons name="document-text-outline" size={20} color="#2C7BE5" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>My Reports</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>My Reports</Text>
+                <Text style={styles.menuSubtext}>View all medical reports</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
             
@@ -162,7 +294,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(56, 191, 167, 0.15)' }]}>
                 <Ionicons name="pulse-outline" size={20} color="#38BFA7" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Health Metrics</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Health Metrics</Text>
+                <Text style={styles.menuSubtext}>Track vital signs</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -174,7 +309,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(255, 193, 7, 0.15)' }]}>
                 <Ionicons name="cloud-upload-outline" size={20} color="#FFC107" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Upload Reports</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Upload Reports</Text>
+                <Text style={styles.menuSubtext}>Add new medical documents</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
           </View>
@@ -191,7 +329,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(233, 30, 99, 0.15)' }]}>
                 <Ionicons name="lock-closed-outline" size={20} color="#E91E63" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Privacy Settings</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Privacy Settings</Text>
+                <Text style={styles.menuSubtext}>Control data sharing</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -202,7 +343,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(103, 58, 183, 0.15)' }]}>
                 <Ionicons name="shield-checkmark-outline" size={20} color="#673AB7" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Security</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Security</Text>
+                <Text style={styles.menuSubtext}>Password & authentication</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -213,7 +357,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(76, 175, 80, 0.15)' }]}>
                 <Ionicons name="download-outline" size={20} color="#4CAF50" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Export Data</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Export Data</Text>
+                <Text style={styles.menuSubtext}>Download your information</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
           </View>
@@ -230,7 +377,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(0, 150, 136, 0.15)' }]}>
                 <Ionicons name="help-circle-outline" size={20} color="#009688" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Help & Support</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Help & Support</Text>
+                <Text style={styles.menuSubtext}>Get assistance</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -242,7 +392,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(255, 152, 0, 0.15)' }]}>
                 <Ionicons name="document-outline" size={20} color="#FF9800" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Terms & Conditions</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Terms & Conditions</Text>
+                <Text style={styles.menuSubtext}>App usage terms</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -254,7 +407,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(63, 81, 181, 0.15)' }]}>
                 <Ionicons name="shield-outline" size={20} color="#3F51B5" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Privacy Policy</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Privacy Policy</Text>
+                <Text style={styles.menuSubtext}>Data protection info</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -266,7 +422,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(244, 67, 54, 0.15)' }]}>
                 <Ionicons name="lock-open-outline" size={20} color="#F44336" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Security Policy</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Security Policy</Text>
+                <Text style={styles.menuSubtext}>Security measures</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -278,7 +437,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(96, 125, 139, 0.15)' }]}>
                 <Ionicons name="code-outline" size={20} color="#607D8B" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Google API Disclosure</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Google API Disclosure</Text>
+                <Text style={styles.menuSubtext}>Third-party integrations</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
           </View>
@@ -295,7 +457,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(3, 169, 244, 0.15)' }]}>
                 <Ionicons name="information-circle-outline" size={20} color="#03A9F4" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>About Webshark Health</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>About Webshark Health</Text>
+                <Text style={styles.menuSubtext}>App information</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -306,7 +471,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(156, 39, 176, 0.15)' }]}>
                 <Ionicons name="star-outline" size={20} color="#9C27B0" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Rate App</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Rate App</Text>
+                <Text style={styles.menuSubtext}>Share your feedback</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
 
@@ -317,7 +485,10 @@ export default function Profile() {
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(121, 85, 72, 0.15)' }]}>
                 <Ionicons name="share-outline" size={20} color="#795548" style={styles.menuIcon} />
               </View>
-              <Text style={styles.menuText}>Share App</Text>
+              <View style={styles.menuContent}>
+                <Text style={styles.menuText}>Share App</Text>
+                <Text style={styles.menuSubtext}>Invite friends & family</Text>
+              </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
           </View>
@@ -405,6 +576,29 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 5,
   },
+  completionContainer: {
+    marginTop: 15,
+    alignItems: 'center',
+    width: '80%',
+  },
+  completionBarBackground: {
+    width: '100%',
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  completionBarFill: {
+    height: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 3,
+  },
+  completionText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 6,
+    fontWeight: '500',
+  },
   infoCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     margin: 15,
@@ -416,16 +610,22 @@ const styles = StyleSheet.create({
   infoHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(160, 192, 255, 0.15)',
-    paddingBottom: 10,
+    paddingBottom: 12,
   },
   infoTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  infoSubtitle: {
+    fontSize: 12,
+    color: '#a0c0ff',
+    marginTop: 2,
+    opacity: 0.8,
   },
   editButton: {
     flexDirection: 'row',
@@ -446,6 +646,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(160, 192, 255, 0.15)',
+    alignItems: 'center',
   },
   infoIcon: {
     width: 30,
@@ -457,11 +658,22 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 12,
     color: '#a0c0ff',
+    fontWeight: '500',
   },
   infoValue: {
     fontSize: 14,
     color: '#fff',
     marginTop: 2,
+    fontWeight: '400',
+  },
+  missingValue: {
+    color: '#FFC107',
+    fontStyle: 'italic',
+    fontSize: 13,
+  },
+  incompleteBadge: {
+    width: 20,
+    alignItems: 'center',
   },
   sectionHeader: {
     paddingHorizontal: 20,
@@ -500,11 +712,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  menuText: {
+  menuContent: {
     flex: 1,
+  },
+  menuText: {
     fontSize: 14,
     color: '#fff',
     fontWeight: '500',
+  },
+  menuSubtext: {
+    fontSize: 12,
+    color: '#a0c0ff',
+    marginTop: 1,
+    opacity: 0.8,
   },
   menuArrow: {
     width: 20,

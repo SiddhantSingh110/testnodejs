@@ -600,7 +600,7 @@ export default function ReportDetail() {
           <View style={styles.recommendationsCard}>
             <View style={styles.recommendationsHeader}>
               <Ionicons name="checkmark-circle" size={20} color="#28D45C" />
-              <Text style={styles.cardTitle}>AI Recommendations</Text>
+              <Text style={styles.cardTitle}> Health Recommendations</Text>
             </View>
             <View style={styles.recommendationsList}>
               {aiSummary.recommendations.map((rec, index) => (
