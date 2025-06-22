@@ -1,6 +1,6 @@
 const ENV = {
   dev: {
-=-0=00-][][-0987654321  ]    apiUrl: 'http://192.168.0.171:8003/api', // Local Backend
+    apiUrl: 'http://192.168.0.171:8003/api', // Local Backend
     environment: 'development'
   },
   staging: {
@@ -14,7 +14,7 @@ const ENV = {
 };
 
 // 🔧 MANUAL SWITCH - Change this when needed
-const CURRENT_ENV = 'development'; // Change to 'dev', 'staging', or 'prod'
+const CURRENT_ENV = 'staging'; // Change to 'dev', 'staging', or 'prod'
 
 const getEnvVars = () => {
   switch (CURRENT_ENV) {
