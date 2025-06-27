@@ -1,6 +1,6 @@
 const ENV = {
   dev: {
-    apiUrl: 'http://192.168.0.171:8003/api', // Local Backend
+    apiUrl: 'http://192.168.1.18:8001/api', // Local Backend
     environment: 'development'
   },
   staging: {

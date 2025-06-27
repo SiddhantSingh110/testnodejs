@@ -51,7 +51,7 @@ export const NewUserScreen = () => {
     ]).start();
 
     setTimeout(() => {
-      router.push('/tabs/upload');
+      router.push('/report-upload');
     }, 100);
   };
 
