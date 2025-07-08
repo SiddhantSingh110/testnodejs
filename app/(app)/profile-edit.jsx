@@ -1,4 +1,4 @@
-// app/tabs/profile/edit.jsx
+// app/(app)/profile-edit.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Platform, Image, Modal, ActivityIndicator, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -230,27 +230,32 @@ export default function EditProfile() {
           try {
             const fileInfo = await FileSystem.getInfoAsync(image);
             if (fileInfo.exists) {
+              let finalImageUri = image;
+              
+              // Resize image if too large
               if (fileInfo.size > 1000000) {
                 const resizedImage = await ImageManipulator.manipulateAsync(
                   image,
                   [{ resize: { width: 500 } }],
                   { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
                 );
-                
-                const fileName = `photo_${Date.now()}.jpg`;
-                formData.append('profile_photo', {
-                  uri: Platform.OS === 'android' ? resizedImage.uri : resizedImage.uri.replace('file://', ''),
-                  name: fileName,
-                  type: 'image/jpeg',
-                });
-              } else {
-                const fileName = `photo_${Date.now()}.jpg`;
-                formData.append('profile_photo', {
-                  uri: Platform.OS === 'android' ? image : image.replace('file://', ''),
-                  name: fileName,
-                  type: 'image/jpeg',
-                });
+                finalImageUri = resizedImage.uri;
               }
+              
+              // Ensure proper URI format for both platforms
+              if (Platform.OS === 'android' && !finalImageUri.startsWith('file://')) {
+                finalImageUri = `file://${finalImageUri}`;
+              }
+              
+              // Create the file object for FormData
+              const fileName = `photo_${Date.now()}.jpg`;
+              const fileObject = {
+                uri: finalImageUri,
+                name: fileName,
+                type: 'image/jpeg',
+              };
+              
+              formData.append('profile_photo', fileObject);
             }
           } catch (error) {
             console.error('Image processing error:', error);
@@ -258,6 +263,7 @@ export default function EditProfile() {
               'Image Processing Error',
               'There was a problem preparing your image for upload: ' + error.message
             );
+            return; // Exit early if image processing fails
           }
         }
 

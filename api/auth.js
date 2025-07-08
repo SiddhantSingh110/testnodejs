@@ -1,5 +1,6 @@
 // api/auth.js
 import axios from 'axios';
+import { Platform } from 'react-native';
 import environment from '../config/environment';
 
 // Create API instance with your backend URL
@@ -137,92 +138,53 @@ export const fetchPatientProfile = async (token) => {
   }
 };
 
+// 🔄 ENHANCED: updatePatientProfile with improved FormData handling
 export const updatePatientProfile = async (formData, token) => {
   try {
-    // Create a custom axios instance for this specific request
-    const formDataInstance = axios.create({
-      baseURL: environment.apiUrl,
-      timeout: 360000, // Increase timeout for file uploads
-    });
-    
-    // Add the same interceptors for debugging
-    formDataInstance.interceptors.request.use(request => {
-      console.log('FormData Request:', request.method, request.url);
-      console.log('FormData Headers:', request.headers);
-      // Don't log the formdata contents as it won't display properly
-      console.log('FormData being sent');
-      return request;
-    });
-    
-    formDataInstance.interceptors.response.use(
-      response => {
-        console.log('FormData Response received:', response.status);
-        console.log('FormData Response data:', response.data);
-        return response;
-      },
-      error => {
-        console.log('FormData API Error:', error.message);
-        if (error.response) {
-          console.log('FormData Error data:', error.response.data);
-          console.log('FormData Error status:', error.response.status);
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    let headers = {
-      Authorization: `Bearer ${token}`,
-    };
-    
-    let data;
-    let config;
-    
-// Inside updatePatientProfile function when handling FormData
-if (formData instanceof FormData) {
-  // Do NOT explicitly set Content-Type for multipart/form-data
-  headers['Accept'] = 'application/json';
-  
-  // Log FormData contents
-  try {
-    for (let pair of formData.entries()) {
-      if (pair[0] === 'profile_photo' && pair[1] && pair[1].uri) {
-        console.log(`FormData entry: ${pair[0]} = [File object - uri: ${pair[1].uri.substring(0, 20)}..., type: ${pair[1].type}]`);
-      } else {
-        console.log(`FormData entry: ${pair[0]} = ${pair[1]}`);
-      }
-    }
-  } catch (err) {
-    console.log('Could not log FormData entries:', err);
-  }
-  
-  // Important: Use POST method for file uploads
-  config = {
-    method: 'post',
-    url: '/patient/profile',
-    headers: headers,
-    data: formData,
-    // Do not transform FormData
-    transformRequest: data => data,
-  };
-  
-  // Send the request
-  const response = await formDataInstance(config);
-  return response.data;
-} else {
-      // For regular JSON data
-      headers['Content-Type'] = 'application/json';
-      data = formData;
+    // Handle FormData requests (with or without files)
+    if (formData instanceof FormData) {
+      // Use native Fetch API for better FormData support on Android/iOS
+      const response = await fetch(`${environment.apiUrl}/patient/profile`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          // Do NOT set Content-Type for FormData - let fetch handle it automatically
+        },
+        body: formData,
+        timeout: 60000, // 60 seconds timeout
+      });
       
-      // Use the regular api instance
-      const response = await api.put('/patient/profile', data, { headers });
+      if (response.ok) {
+        const result = await response.json();
+        return result;
+      } else {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} ${errorText}`);
+      }
+    } else {
+      // Handle regular JSON data with Axios
+      const response = await api.put('/patient/profile', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      });
       return response.data;
     }
   } catch (error) {
-    console.error('Profile update error:', error.response?.data || error.message);
-    if (error.response) {
+    console.error('Profile update error:', error.message);
+    
+    // Provide user-friendly error messages
+    if (error.message.includes('Network request failed')) {
+      throw { message: 'Network connection failed. Please check your internet connection.' };
+    } else if (error.message.includes('timeout')) {
+      throw { message: 'Request timed out. Please try again.' };
+    } else if (error.response) {
       throw error.response.data || { message: 'Server error' };
     } else {
-      throw { message: 'Network error' };
+      throw { message: `Network error: ${error.message}` };
     }
   }
 };

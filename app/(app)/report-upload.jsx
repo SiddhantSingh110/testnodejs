@@ -539,9 +539,9 @@ export default function UploadReportScreen() {
   const handleViewReport = () => {
     setShowHealthMetricsModal(false);
     if (reportId) {
-      router.push(`/tabs/reports/${reportId}`);
+      router.push(`/report-detail?id=${reportId}`);
     } else {
-      router.push('/tabs/reports');
+      router.push('/report-detail');
     }
   };
 
