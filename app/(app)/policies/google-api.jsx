@@ -32,8 +32,8 @@ export default function GoogleAPIPolicy() {
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <Text style={styles.lastUpdated}>LAST UPDATED ON</Text>
-          <Text style={styles.updateDate}>5th June 2025</Text>
-          <Text style={styles.heroTitle}>google{'\n'}services</Text>
+          <Text style={styles.updateDate}>14th July 2025</Text>
+          <Text style={styles.heroTitle}>Google{'\n'}Services</Text>
           <Text style={styles.heroSubtitle}>
             integration with google cloud vision api for optical character recognition and text extraction.
           </Text>

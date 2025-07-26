@@ -23,7 +23,7 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         headerShown: false,
         headerTransparent: true,
-        gestureEnabled: true, // ✅ Enable swipe gesture - safe now with group navigation
+        gestureEnabled: false, // ❌ DISABLED: Prevent back gesture on tab screens
         headerBackground: () => (
           <BlurView
             tint="dark"
@@ -116,7 +116,8 @@ export default function TabsLayout() {
           // Override headerShown that you set earlier
           headerShown: false,
           // title affects things like screen reader and window title
-          title: "WEBSHARK HEALTH"
+          title: "WEBSHARK HEALTH",
+          gestureEnabled: false, // ❌ DISABLED: No back gesture on main tab screens
         }}
       />
      <Tabs.Screen
@@ -132,6 +133,7 @@ export default function TabsLayout() {
         ),
         headerStyle: { backgroundColor: '#121212' },
         headerTintColor: '#fff',
+        gestureEnabled: false, // ❌ DISABLED: No back gesture on main tab screens
       }}
     />
 
@@ -148,7 +150,8 @@ export default function TabsLayout() {
         ),
         headerStyle: { backgroundColor: '#091429' },
         headerTintColor: '#fff',
-        headerTitleStyle: { fontSize: 18, fontWeight: '600' }
+        headerTitleStyle: { fontSize: 18, fontWeight: '600' },
+        gestureEnabled: false, // ❌ DISABLED: No back gesture on main tab screens
       }}
     />
 
@@ -165,7 +168,8 @@ export default function TabsLayout() {
       ),
       headerStyle: { backgroundColor: '#091429' },
       headerTintColor: '#fff',
-      headerTitleStyle: { fontSize: 18, fontWeight: '600' }
+      headerTitleStyle: { fontSize: 18, fontWeight: '600' },
+      gestureEnabled: false, // ❌ DISABLED: No back gesture on main tab screens
     }}
   />
       

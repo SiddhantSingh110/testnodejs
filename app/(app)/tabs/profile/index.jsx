@@ -160,17 +160,19 @@ export default function Profile() {
             <Text style={styles.phone}>{formatPhoneNumber(user?.phone) || 'Phone not available'}</Text>
             
             {/* Profile Completion Indicator */}
-            <View style={styles.completionContainer}>
-              <View style={styles.completionBarBackground}>
-                <View 
-                  style={[
-                    styles.completionBarFill, 
-                    { width: `${profileCompletion}%` }
-                  ]} 
-                />
+            {profileCompletion < 100 && (
+              <View style={styles.completionContainer}>
+                <View style={styles.completionBarBackground}>
+                  <View 
+                    style={[
+                      styles.completionBarFill, 
+                      { width: `${profileCompletion}%` }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.completionText}>{profileCompletion}% Profile Complete</Text>
               </View>
-              <Text style={styles.completionText}>{profileCompletion}% Profile Complete</Text>
-            </View>
+            )}
           </LinearGradient>
           
           <View style={styles.infoCard}>
@@ -303,7 +305,7 @@ export default function Profile() {
 
             <TouchableOpacity 
               style={styles.menuItem}
-              onPress={() => router.push('/tabs/upload')}
+              onPress={() => router.push('/report-upload')}
               activeOpacity={0.7}
             >
               <View style={[styles.menuIconBg, { backgroundColor: 'rgba(255, 193, 7, 0.15)' }]}>
@@ -318,6 +320,7 @@ export default function Profile() {
           </View>
           
           {/* Settings Section */}
+          {/* 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>ACCOUNT SETTINGS</Text>
           </View>
@@ -364,13 +367,14 @@ export default function Profile() {
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
           </View>
-          
+          */}
           {/* Support Section */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>SUPPORT & POLICIES</Text>
           </View>
           <View style={styles.menuCard}>
-            <TouchableOpacity 
+           {/*  
+           <TouchableOpacity 
               style={styles.menuItem}
               activeOpacity={0.7}
             >
@@ -383,7 +387,7 @@ export default function Profile() {
               </View>
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
-
+            */}
             <TouchableOpacity 
               style={styles.menuItem}
               onPress={() => router.push('/policies/terms')}
@@ -446,6 +450,7 @@ export default function Profile() {
           </View>
 
           {/* About Section */}
+          {/*
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>ABOUT</Text>
           </View>
@@ -492,6 +497,7 @@ export default function Profile() {
               <Ionicons name="chevron-forward" size={20} color="#a0c0ff" style={styles.menuArrow} />
             </TouchableOpacity>
           </View>
+          */}
           
           <TouchableOpacity 
             style={styles.logoutButton} 
@@ -502,7 +508,7 @@ export default function Profile() {
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
           
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={styles.versionText}>Version 1.4.2</Text>
         </ScrollView>
       </SafeAreaView>
     </>

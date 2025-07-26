@@ -1,17 +1,20 @@
-// app/tabs/health/styles/HealthMetrics.styles.js - Enhanced with new features
+// app/tabs/health/styles/HealthMetrics.styles.js - Enhanced with improved color scheme
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#0A0F1C', // Darker, more comfortable background
     paddingTop: 8,
+    width: '100%',
   },
   scrollView: {
     flex: 1,
+    width: '100%',
   },
   scrollContent: {
     paddingBottom: 120, // Extra padding at the bottom
+    width: '100%',
   },
   loader: {
     flex: 1,
@@ -22,23 +25,23 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0B1426',
+    backgroundColor: '#0A0F1C',
   },
   loaderText: {
     fontSize: 16,
-    color: '#a0c0ff',
+    color: '#8BB9E8', // Softer blue
     marginTop: 12,
   },
 
-  // ✨ Recent Updates Section
+  // ✨ Recent Updates Section - Improved colors
   recentUpdatesCard: {
-    backgroundColor: 'rgba(56, 191, 167, 0.1)',
+    backgroundColor: 'rgba(30, 40, 60, 0.6)', // More neutral dark blue
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 15,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(56, 191, 167, 0.2)',
+    borderColor: 'rgba(100, 150, 200, 0.2)', // Softer border
   },
   recentUpdatesHeader: {
     flexDirection: 'row',
@@ -54,7 +57,7 @@ export const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(56, 191, 167, 0.2)',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)', // Softer green
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -62,7 +65,7 @@ export const styles = StyleSheet.create({
   recentUpdatesTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#E2E8F0', // Softer white
   },
   dismissButton: {
     padding: 4,
@@ -87,20 +90,20 @@ export const styles = StyleSheet.create({
   recentUpdateTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: '#E2E8F0',
   },
   recentUpdateSubtitle: {
     fontSize: 12,
-    color: '#a0c0ff',
+    color: '#94A3B8', // Neutral gray-blue
     marginTop: 2,
   },
   recentUpdateDate: {
     fontSize: 11,
-    color: '#aaa',
+    color: '#64748B',
     marginTop: 2,
   },
   reviewBadge: {
-    backgroundColor: '#38BFA7',
+    backgroundColor: '#22C55E', // Softer green
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -114,42 +117,47 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(56, 191, 167, 0.1)',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: 'rgba(56, 191, 167, 0.3)',
+    borderColor: 'rgba(34, 197, 94, 0.3)',
   },
   reviewAllButtonText: {
     fontSize: 12,
-    color: '#38BFA7',
+    color: '#22C55E',
     fontWeight: '500',
     marginLeft: 6,
   },
   
-  // Category Selectors
+  // Category Selectors - Improved colors
   categorySelector: {
     padding: 15,
     paddingBottom: 10,
+    maxWidth: '100%',
   },
   categoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    marginRight: 10,
+    marginRight: 10, 
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
+    minWidth: 80,
   },
   categoryButtonActive: {
-    backgroundColor: '#38BFA7',
+    backgroundColor: '#3B82F6', // Professional blue
+    borderColor: '#3B82F6',
   },
   categoryButtonText: {
     marginLeft: 6,
     fontSize: 13,
-    color: '#aaa',
+    color: '#94A3B8',
   },
   categoryButtonTextActive: {
     color: '#fff',
@@ -160,53 +168,60 @@ export const styles = StyleSheet.create({
   subCategorySelector: {
     paddingHorizontal: 15,
     paddingBottom: 15,
+    maxWidth: '100%',
   },
   subCategoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(51, 65, 85, 0.4)',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    marginRight: 10,
+    marginRight: 10, 
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(100, 116, 139, 0.2)',
+    minWidth: 70,
   },
   subCategoryButtonText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#ddd',
+    color: '#CBD5E1',
   },
   
   // Metric selector
   metricSelector: {
     paddingHorizontal: 15,
     paddingBottom: 15,
+    maxWidth: '100%',
   },
   metricTypeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(100, 116, 139, 0.3)',
+    minWidth: 90,
   },
   metricTypeText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#ddd',
+    color: '#CBD5E1',
   },
   
-  // Current Value Card
+  // Current Value Card - Improved gradient approach
   currentValueCard: {
     margin: 15,
     marginTop: 0,
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)', // Neutral background
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   currentValueHeader: {
     width: '100%',
@@ -216,7 +231,7 @@ export const styles = StyleSheet.create({
   },
   currentValueLabel: {
     fontSize: 14,
-    color: '#bbb',
+    color: '#94A3B8',
   },
   headerActions: {
     flexDirection: 'row',
@@ -239,14 +254,14 @@ export const styles = StyleSheet.create({
   },
   currentValueUnit: {
     fontSize: 16,
-    color: '#aaa',
+    color: '#64748B',
     marginLeft: 5,
   },
 
   // ✨ Enhanced: Reference range in Level 1
   referenceRange: {
     fontSize: 12,
-    color: '#a0c0ff',
+    color: '#8BB9E8', // Softer blue
     marginTop: 4,
     marginBottom: 8,
     textAlign: 'center',
@@ -259,16 +274,16 @@ export const styles = StyleSheet.create({
   },
   noDataText: {
     fontSize: 16,
-    color: '#aaa',
+    color: '#94A3B8',
     fontWeight: '500',
   },
   noDataSubtext: {
     fontSize: 14,
-    color: '#888',
+    color: '#64748B',
     marginTop: 4,
   },
 
-  // ✨ Enhanced: Status indicators
+  // ✨ Enhanced: Status indicators - Improved colors
   statusContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -277,10 +292,12 @@ export const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   statusIndicator: {
     width: 8,
@@ -289,17 +306,17 @@ export const styles = StyleSheet.create({
     marginRight: 6,
   },
   statusNormal: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#22C55E', // Softer green
   },
   statusBorderline: {
-    backgroundColor: '#FFC107',
+    backgroundColor: '#F59E0B', // Softer amber
   },
   statusHigh: {
-    backgroundColor: '#F44336',
+    backgroundColor: '#EF4444', // Softer red
   },
   statusText: {
     fontSize: 12,
-    color: '#fff',
+    color: '#E2E8F0',
     fontWeight: '500',
   },
 
@@ -312,7 +329,7 @@ export const styles = StyleSheet.create({
   },
   changeLabel: {
     fontSize: 12,
-    color: '#a0c0ff',
+    color: '#8BB9E8',
     marginRight: 6,
   },
   changeValue: {
@@ -320,13 +337,13 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
   increaseValue: {
-    color: '#4CAF50',
+    color: '#22C55E',
   },
   decreaseValue: {
-    color: '#F44336',
+    color: '#EF4444',
   },
   unchangedValue: {
-    color: '#aaa',
+    color: '#94A3B8',
   },
 
   // ✨ Enhanced: Measurement info with source
@@ -335,7 +352,7 @@ export const styles = StyleSheet.create({
   },
   measurementDate: {
     fontSize: 13,
-    color: '#a0c0ff',
+    color: '#8BB9E8',
     marginBottom: 4,
   },
   measurementSourceContainer: {
@@ -344,11 +361,11 @@ export const styles = StyleSheet.create({
   },
   measurementSource: {
     fontSize: 12,
-    color: '#aaa',
+    color: '#94A3B8',
     marginLeft: 4,
   },
   needsReviewBadge: {
-    backgroundColor: '#38BFA7',
+    backgroundColor: '#22C55E',
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 8,
@@ -389,7 +406,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
   },
   goalButtonText: {
     fontSize: 14,
@@ -400,12 +417,14 @@ export const styles = StyleSheet.create({
   percentileContainer: {
     width: '100%',
     marginTop: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     borderRadius: 10,
     padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   percentileTitle: {
-    color: '#eee',
+    color: '#E2E8F0',
     fontSize: 13,
     fontWeight: '500',
     marginBottom: 8,
@@ -415,14 +434,14 @@ export const styles = StyleSheet.create({
   },
   percentileBar: {
     height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(100, 116, 139, 0.3)',
     borderRadius: 4,
     overflow: 'hidden',
     position: 'relative',
   },
   percentileFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#22C55E',
     borderRadius: 4,
   },
   percentileTarget: {
@@ -430,7 +449,7 @@ export const styles = StyleSheet.create({
     top: -3,
     width: 2,
     height: 14,
-    backgroundColor: '#FFC107',
+    backgroundColor: '#F59E0B',
   },
   recommendationsButton: {
     flexDirection: 'row',
@@ -439,24 +458,24 @@ export const styles = StyleSheet.create({
     marginTop: 8,
   },
   recommendationsButtonText: {
-    color: '#ddd',
+    color: '#CBD5E1',
     fontSize: 12,
   },
   
   // ✨ Enhanced: Insights card
   insightsCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     borderRadius: 16,
     padding: 16,
     margin: 15,
     marginTop: 0,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   insightsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#E2E8F0',
     marginBottom: 12,
   },
   insightItem: {
@@ -464,19 +483,20 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#38BFA7',
+    borderLeftColor: '#3B82F6',
+    backgroundColor: 'rgba(59, 130, 246, 0.05)',
   },
   insightWarning: {
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-    borderLeftColor: '#FFC107',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderLeftColor: '#F59E0B',
   },
   insightAttention: {
-    backgroundColor: 'rgba(244, 67, 54, 0.1)',
-    borderLeftColor: '#F44336',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderLeftColor: '#EF4444',
   },
   insightPositive: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    borderLeftColor: '#4CAF50',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderLeftColor: '#22C55E',
   },
   insightHeader: {
     flexDirection: 'row',
@@ -486,27 +506,29 @@ export const styles = StyleSheet.create({
   insightTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: '#E2E8F0',
     marginLeft: 8,
   },
   insightDescription: {
     fontSize: 13,
-    color: '#a0c0ff',
+    color: '#8BB9E8',
     lineHeight: 18,
   },
   insightDate: {
     fontSize: 11,
-    color: '#aaa',
+    color: '#64748B',
     marginTop: 4,
   },
   
-  // Chart Card
+  // Chart Card - Improved background
   chartCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     margin: 15,
     marginTop: 0,
     padding: 15,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   chartHeader: {
     flexDirection: 'row',
@@ -517,24 +539,26 @@ export const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#E2E8F0',
   },
   timeframeButtons: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     borderRadius: 8,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   timeframeButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   timeframeButtonActive: {
-    backgroundColor: '#38BFA7',
+    backgroundColor: '#3B82F6',
   },
   timeframeButtonText: {
     fontSize: 12,
-    color: '#aaa',
+    color: '#94A3B8',
   },
   timeframeButtonTextActive: {
     fontSize: 12,
@@ -559,40 +583,44 @@ export const styles = StyleSheet.create({
   },
   noChartDataText: {
     fontSize: 14,
-    color: '#aaa',
+    color: '#94A3B8',
     marginTop: 8,
   },
   noChartDataSubtext: {
     fontSize: 12,
-    color: '#888',
+    color: '#64748B',
     marginTop: 4,
     textAlign: 'center',
   },
   annotation: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
     borderRadius: 8,
     padding: 10,
     marginTop: 10,
     borderLeftWidth: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   annotationTitle: {
-    color: '#fff',
+    color: '#E2E8F0',
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 5,
   },
   annotationText: {
-    color: '#aaa',
+    color: '#94A3B8',
     fontSize: 12,
   },
   
-  // History Card
+  // History Card - Improved background
   historyCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     margin: 15,
     marginTop: 0,
     padding: 15,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   historyHeader: {
     flexDirection: 'row',
@@ -603,19 +631,21 @@ export const styles = StyleSheet.create({
   historyTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#E2E8F0',
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   filterButtonText: {
     fontSize: 12,
-    color: '#aaa',
+    color: '#94A3B8',
     marginLeft: 5,
   },
   historyItem: {
@@ -623,7 +653,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: 'rgba(100, 116, 139, 0.2)',
   },
   historyItemLeft: {
     flex: 1,
@@ -634,7 +664,7 @@ export const styles = StyleSheet.create({
   },
   historyDate: {
     fontSize: 14,
-    color: '#aaa',
+    color: '#94A3B8',
     marginBottom: 2,
   },
 
@@ -652,18 +682,18 @@ export const styles = StyleSheet.create({
   },
   historySourceText: {
     fontSize: 11,
-    color: '#aaa',
+    color: '#94A3B8',
     marginLeft: 3,
   },
   historyContext: {
     fontSize: 10,
-    color: '#888',
+    color: '#64748B',
     marginLeft: 8,
   },
 
   // ✨ Enhanced: History review badge
   historyReviewBadge: {
-    backgroundColor: '#38BFA7',
+    backgroundColor: '#22C55E',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -682,17 +712,17 @@ export const styles = StyleSheet.create({
   historyValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#E2E8F0',
   },
   historyValueBorderline: {
-    color: '#FFC107',
+    color: '#F59E0B',
   },
   historyValueHigh: {
-    color: '#F44336',
+    color: '#EF4444',
   },
   historyUnit: {
     fontWeight: 'normal',
-    color: '#aaa',
+    color: '#94A3B8',
     fontSize: 12,
     marginLeft: 2,
   },
@@ -709,19 +739,21 @@ export const styles = StyleSheet.create({
     height: 80,
   },
   
-  // Modal styles - Add New Measurement
+  // Modal styles - Add New Measurement - Improved colors
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#1E293B',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
     paddingBottom: 30,
     maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -732,7 +764,7 @@ export const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#E2E8F0',
   },
   modalScrollView: {
     maxHeight: '60%',
@@ -742,45 +774,49 @@ export const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: '#aaa',
+    color: '#94A3B8',
     marginBottom: 8,
   },
   valueInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     borderRadius: 8,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   valueInput: {
     flex: 1,
-    color: '#fff',
+    color: '#E2E8F0',
     paddingVertical: 12,
     fontSize: 16,
   },
   valueUnit: {
-    color: '#aaa',
+    color: '#94A3B8',
     fontSize: 16,
   },
   notesInput: {
-    color: '#fff',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: '#E2E8F0',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     borderRadius: 8,
     padding: 12,
     height: 80,
     textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   contextButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 15,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   contextButtonText: {
-    color: '#ddd',
+    color: '#CBD5E1',
     fontSize: 13,
   },
   timeInputContainer: {
@@ -791,13 +827,15 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   dateButtonText: {
-    color: '#fff',
+    color: '#E2E8F0',
     fontSize: 14,
   },
   saveButton: {
@@ -815,16 +853,18 @@ export const styles = StyleSheet.create({
   // Modal styles - Metric Info
   infoModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   infoModalContent: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#1E293B',
     borderRadius: 16,
     padding: 20,
     width: '90%',
     maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
   },
   infoModalHeader: {
     flexDirection: 'row',
@@ -835,7 +875,7 @@ export const styles = StyleSheet.create({
   infoModalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#E2E8F0',
   },
   infoModalBody: {
     maxHeight: '70%',
@@ -846,11 +886,11 @@ export const styles = StyleSheet.create({
   infoSectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#E2E8F0',
     marginBottom: 8,
   },
   infoSectionText: {
-    color: '#ddd',
+    color: '#CBD5E1',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -864,20 +904,20 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rangeLow: {
-    backgroundColor: 'rgba(244, 67, 54, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
     borderTopLeftRadius: 6,
     borderBottomLeftRadius: 6,
   },
   rangeOptimal: {
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
   },
   rangeHigh: {
-    backgroundColor: 'rgba(244, 67, 54, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
     borderTopRightRadius: 6,
     borderBottomRightRadius: 6,
   },
   rangeText: {
-    color: '#fff',
+    color: '#E2E8F0',
     fontSize: 12,
   },
   rangeDetails: {
@@ -895,7 +935,7 @@ export const styles = StyleSheet.create({
     marginRight: 8,
   },
   rangeDetailText: {
-    color: '#ddd',
+    color: '#CBD5E1',
     fontSize: 13,
   },
   rangeDetailTitle: {
@@ -912,7 +952,7 @@ export const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#38BFA7',
+    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -921,13 +961,13 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   factorTitle: {
-    color: '#fff',
+    color: '#E2E8F0',
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 3,
   },
   factorDescription: {
-    color: '#aaa',
+    color: '#94A3B8',
     fontSize: 13,
     lineHeight: 18,
   },
@@ -936,19 +976,21 @@ export const styles = StyleSheet.create({
   },
   concernItem: {
     padding: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     borderRadius: 8,
     marginBottom: 10,
     borderLeftWidth: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   concernTitle: {
-    color: '#fff',
+    color: '#E2E8F0',
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 5,
   },
   concernDescription: {
-    color: '#aaa',
+    color: '#94A3B8',
     fontSize: 13,
     lineHeight: 18,
   },
@@ -958,12 +1000,12 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   resourceLinkText: {
-    color: '#38BFA7',
+    color: '#3B82F6',
     marginLeft: 10,
     textDecorationLine: 'underline',
   },
   infoSourceText: {
-    color: '#777',
+    color: '#64748B',
     fontSize: 11,
     textAlign: 'center',
     marginTop: 15,
@@ -987,7 +1029,7 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
   },
   goalCurrentValueLabel: {
-    color: '#aaa',
+    color: '#94A3B8',
     fontSize: 14,
     marginBottom: 5,
   },
@@ -1004,28 +1046,32 @@ export const styles = StyleSheet.create({
     width: 50,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(100, 116, 139, 0.3)',
     position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.5)',
   },
   toggleHandle: {
     position: 'absolute',
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#fff',
+    backgroundColor: '#E2E8F0',
     top: 2,
   },
   goalSuggestion: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     padding: 12,
     borderRadius: 8,
     marginTop: 20,
     borderLeftWidth: 3,
-    borderLeftColor: '#FFC107',
+    borderLeftColor: '#F59E0B',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.2)',
   },
   goalSuggestionText: {
-    color: '#ddd',
+    color: '#CBD5E1',
     fontSize: 13,
     lineHeight: 18,
     marginLeft: 10,
@@ -1037,10 +1083,12 @@ export const styles = StyleSheet.create({
     maxHeight: '70%',
   },
   recommendationItem: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   recommendationHeader: {
     flexDirection: 'row',
@@ -1056,20 +1104,22 @@ export const styles = StyleSheet.create({
     marginRight: 10,
   },
   recommendationTitle: {
-    color: '#fff',
+    color: '#E2E8F0',
     fontSize: 16,
     fontWeight: '500',
   },
   recommendationDescription: {
-    color: '#ddd',
+    color: '#CBD5E1',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 15,
   },
   recommendationSteps: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(51, 65, 85, 0.4)',
     borderRadius: 8,
     padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
   },
   recommendationStep: {
     flexDirection: 'row',
@@ -1080,7 +1130,7 @@ export const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#38BFA7',
+    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -1092,7 +1142,7 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   recommendationStepText: {
-    color: '#ddd',
+    color: '#CBD5E1',
     fontSize: 14,
     lineHeight: 20,
     flex: 1,
@@ -1102,9 +1152,174 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   recommendationSourceText: {
-    color: '#777',
+    color: '#64748B',
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  // Enhanced Goal Modal Styles
+  goalCurrentRange: {
+    fontSize: 12,
+    color: '#8BB9E8',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+
+  // Smart Suggestions Styles
+  suggestionsContainer: {
+    marginBottom: 20,
+    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  suggestionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  suggestionsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#E2E8F0',
+    marginLeft: 8,
+  },
+  suggestionCard: {
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
+    position: 'relative',
+  },
+  suggestionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  suggestionTypeContainer: {
+    flex: 1,
+  },
+  suggestionType: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  suggestionTarget: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#E2E8F0',
+  },
+  suggestionTimeframe: {
+    fontSize: 12,
+    color: '#94A3B8',
+    backgroundColor: 'rgba(100, 116, 139, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  suggestionReasoning: {
+    fontSize: 13,
+    color: '#CBD5E1',
+    lineHeight: 18,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+
+  // Timeline Options
+  timelineOption: {
+    backgroundColor: 'rgba(51, 65, 85, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.3)',
+  },
+  timelineOptionText: {
+    fontSize: 13,
+    color: '#CBD5E1',
+  },
+
+  // Advanced Options
+  advancedToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    marginBottom: 8,
+  },
+  advancedToggleText: {
+    fontSize: 14,
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  advancedOptions: {
+    backgroundColor: 'rgba(30, 41, 59, 0.4)',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 116, 139, 0.2)',
+  },
+
+  // Medical Information
+  medicalInfoContainer: {
+    backgroundColor: 'rgba(34, 197, 94, 0.05)',
+    borderRadius: 10,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+  },
+  medicalInfoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22C55E',
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  medicalInfoText: {
+    fontSize: 13,
+    color: '#CBD5E1',
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+
+  // Improvement Tips
+  improvementTips: {
+    marginTop: 8,
+  },
+  improvementTipsTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#E2E8F0',
+    marginBottom: 8,
+  },
+  improvementTip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+    paddingLeft: 4,
+  },
+  improvementTipText: {
+    fontSize: 12,
+    color: '#CBD5E1',
+    lineHeight: 16,
+    marginLeft: 8,
+    flex: 1,
+  },
+  improvementTipType: {
+    fontWeight: '600',
+    color: '#E2E8F0',
+    textTransform: 'capitalize',
   },
 });

@@ -48,6 +48,7 @@ const ProgressBar = ({ progress }) => {
 
 // Simple, relatable health tips for everyday users
 const healthTips = [
+  // Health Tips
   "Drinking 8 glasses of water daily helps keep your body healthy and energized.",
   "Walking for just 30 minutes a day can improve your heart health significantly.",
   "Getting 7-8 hours of sleep helps your body recover and stay strong.",
@@ -67,8 +68,42 @@ const healthTips = [
   "Regular dental check-ups prevent small problems from becoming big ones.",
   "Staying hydrated helps your skin look healthy and feel smooth.",
   "Gentle exercise like yoga can help reduce stress and anxiety.",
-  "Keeping a health diary helps you track patterns and improvements."
+  "Keeping a health diary helps you track patterns and improvements.",
+  
+  // Amazing Body Facts
+  "Amazing Fact: Your brain uses 20% of your body's total energy, even though it's only 2% of your body weight!",
+  "Did You Know: Your heart beats about 100,000 times per day - that's 35 million times a year!",
+  "Incredible: Your stomach gets an entirely new lining every 3-4 days because stomach acid would digest it otherwise.",
+  "Wow: You produce about 1.5 liters of saliva every day - that's enough to fill 2 water bottles!",
+  "Amazing: Your liver can regenerate itself! Even if 75% is removed, it can grow back to full size.",
+  "Fact: You blink about 17,000 times per day - that's like a 40-minute eye workout!",
+  "Incredible: Your lungs contain about 300 million tiny air sacs called alveoli.",
+  "Did You Know: Your body produces 25 million new cells every second - you're constantly rebuilding yourself!",
+  "Wow: Your kidneys filter about 180 liters of blood every day - that's like filtering a bathtub full of water!",
+  "Amazing: Your bones are 4 times stronger than concrete, yet they're mostly made of water and minerals.",
+  "Fact: You lose about 8 pounds of dead skin cells every year - your skin completely renews itself every 28 days.",
+  "Incredible: Your small intestine is about 20 feet long, but it's coiled up to fit in your belly.",
+  "Did You Know: Your body contains about 37 trillion cells - that's more than the number of stars in our galaxy!",
+  "Wow: Your blood travels 12,000 miles through your body every day - that's like going halfway around the Earth!",
+  "Amazing: You can't taste food without saliva - it helps dissolve food so taste buds can detect flavors.",
+  "Fact: Your brain has no pain receptors, which is why brain surgery can be done while you're awake.",
+  "Incredible: Your stomach can stretch to hold up to 4 liters of food - that's like 4 large water bottles!",
+  "Did You Know: You're taller in the morning! Gravity compresses your spine during the day, making you shorter.",
+  "Wow: Your fingernails grow 4 times faster than your toenails - and they grow faster in summer!",
+  "Amazing: You breathe in about 11,000 liters of air every day - that's enough to fill a small room!",
+  "Fact: Your eyes can distinguish between 10 million different colors, but most people can only name about 100.",
+  "Incredible: Your body temperature drops by 1-2 degrees when you sleep - that's why you need blankets!",
+  "Did You Know: Laughing for 15 minutes can burn as many calories as walking for 30 minutes.",
+  "Wow: Your ears never stop growing throughout your entire life - they grow about 0.22mm per year!",
+  "Amazing: You shed about 40,000 dead skin cells every minute - that's like losing a layer of skin every month!"
 ];
+
+const getTipIcon = (tip) => {
+  if (tip.includes("Amazing Fact") || tip.includes("Did You Know") || tip.includes("Incredible") || tip.includes("Wow") || tip.includes("Fact")) {
+    return "🧠"; // Brain emoji for facts
+  }
+  return "💡"; // Light bulb for tips
+};
 
 export default function UploadReportScreen() {
   const [title, setTitle] = useState('');
@@ -488,11 +523,11 @@ export default function UploadReportScreen() {
           : '📊 Report Analysis Complete';
         
       const notificationBody = uploadResult.metricsExtracted > 0
-        ? `Great news! We found ${uploadResult.metricsExtracted} health details in your "${title}" report. Check your Health tab!`
-        : response.data?.file_type === 'image'
-          ? `Your "${title}" report has been read and analyzed. Tap to view your results!`
-          : `Your "${title}" report has been processed and insights are ready to view.`;
-
+          ? `Great news! We found ${uploadResult.metricsExtracted} health values in your "${title}" lab report. Check your Health tab!`
+          : response.data?.file_type === 'image'
+            ? `Your "${title}" lab report has been read and analyzed. Tap to view your health insights!`
+            : `Your "${title}" lab report has been processed and health insights are ready to view.`;
+        
       await Notifications.scheduleNotificationAsync({
         content: {
           title: notificationTitle,
@@ -595,10 +630,10 @@ export default function UploadReportScreen() {
               </View>
 
               <ScrollView style={styles.modalBody}>
-                <Text style={styles.modalDescription}>
-                  Excellent! Webshark Health AI automatically found important health information in your report. 
-                  You can see all the details in your Health section.
-                </Text>
+              <Text style={styles.modalDescription}>
+                Excellent! Webshark Health AI found important health values in your lab report. 
+                You can see all your test results and health insights in simple language in your Health section.
+              </Text>
 
                 {/* Categories found */}
                 {healthMetricsExtracted.categories.length > 0 && (
@@ -690,20 +725,20 @@ export default function UploadReportScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add Medical Report</Text>
+          <Text style={styles.headerTitle}>Add Lab Test Report</Text>
         </View>
 
         <View style={styles.formContainer}>
           <Text style={styles.label}>Report Name</Text>
           <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Give your report a name (e.g., Blood Test Results)"
-              placeholderTextColor="#6d88b7"
-              value={title}
-              onChangeText={setTitle}
-              style={styles.input}
-              editable={!uploading && !uploadComplete}
-            />
+          <TextInput
+            placeholder="Give your report a name (e.g., Blood Test Dec 2024)"
+            placeholderTextColor="#6d88b7"
+            value={title}
+            onChangeText={setTitle}
+            style={styles.input}
+            editable={!uploading && !uploadComplete}
+          />
           </View>
 
           <Text style={styles.label}>Report File</Text>
@@ -726,14 +761,16 @@ export default function UploadReportScreen() {
                   <Text style={styles.fileName} numberOfLines={1} ellipsizeMode="middle">
                     {file.name}
                   </Text>
+                  <View>
                   <Text style={styles.fileSize}>
                     {file.size ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' : 'File size unknown'}
-                    {file.enhanced && (
-                      <Text style={{ color: '#38BFA7', fontSize: 12 }}>
-                        {' • Enhanced for text reading'}
-                      </Text>
-                    )}
                   </Text>
+                  {file.enhanced && (
+                    <Text style={{ color: '#38BFA7', fontSize: 12 }}>
+                      • Enhanced for text reading
+                    </Text>
+                  )}
+                </View>
                 </View>
                 {!uploading && !uploadComplete && (
                   <TouchableOpacity 
@@ -747,10 +784,10 @@ export default function UploadReportScreen() {
               </View>
             ) : (
               <View style={styles.chooserContainer}>
-                <Ionicons name="add-circle-outline" size={36} color="#a0c0ff" />
-                <Text style={styles.chooserText}>Add Your Medical Report</Text>
-                <Text style={styles.chooserSubtext}>Take Photo • Gallery • Document</Text>
-              </View>
+              <Ionicons name="add-circle-outline" size={36} color="#a0c0ff" />
+              <Text style={styles.chooserText}>Add Your Lab Test Report</Text>
+              <Text style={styles.chooserSubtext}>Blood Test • Health Checkup • Lab Results</Text>
+             </View>
             )}
           </TouchableOpacity>
 
@@ -769,7 +806,9 @@ export default function UploadReportScreen() {
               </Text>
               
               <View style={styles.factContainer}>
-                <Text style={styles.factTitle}>Health Tip 💡</Text>
+                <Text style={styles.factTitle}>
+                  {getTipIcon(healthTips[currentTipIndex])} {healthTips[currentTipIndex].includes("Amazing Fact") || healthTips[currentTipIndex].includes("Did You Know") || healthTips[currentTipIndex].includes("Incredible") || healthTips[currentTipIndex].includes("Wow") || healthTips[currentTipIndex].includes("Fact") ? "Amazing Body Fact" : "Health Tip"}
+                </Text>
                 <Text style={styles.factText}>
                   {healthTips[currentTipIndex]}
                 </Text>
@@ -844,15 +883,28 @@ export default function UploadReportScreen() {
           {!file && !uploading && !uploadComplete && (
             <View style={styles.helpTextContainer}>
               <Ionicons name="information-circle-outline" size={20} color="#a0c0ff" style={styles.helpIcon} />
-              <Text style={styles.helpText}>
-                Add your medical reports and lab results. 
-                Take a photo or select a document. 
-                Webshark Health AI will read your report and find important health information.
-              </Text>
+              <View style={styles.helpTextContent}>
+                <Text style={styles.helpText}>
+                  Upload your{' '}
+                  <Text style={{color: '#38BFA7', fontWeight: '600'}}>lab test reports</Text>
+                  {' '}like blood tests, urine tests, liver function, kidney function, and other medical test results.
+                </Text>
+                <Text style={[styles.helpText, {marginTop: 4}]}>
+                  Webshark Health AI will read your report values and give you easy-to-understand health insights.
+                </Text>
+                
+                <View style={styles.comingSoonContainer}>
+                  <Ionicons name="time-outline" size={14} color="#FFC107" />
+                  <Text style={styles.comingSoonText}>
+                    Prescriptions & X-ray scans coming in next update!
+                  </Text>
+                </View>
+              </View>
             </View>
           )}
-        </View>
+        </View> 
       </ScrollView>
+
 
       {/* Health Information Modal */}
       {renderHealthMetricsModal()}
@@ -915,7 +967,7 @@ export default function UploadReportScreen() {
               </View>
 
               <View style={styles.optionsContainer}>
-                <TouchableOpacity 
+              <TouchableOpacity 
                   style={styles.optionButton}
                   onPress={takePhoto}
                   activeOpacity={0.8}
@@ -929,8 +981,8 @@ export default function UploadReportScreen() {
                     </View>
                     <View style={styles.optionContent}>
                       <Text style={styles.optionTitle}>Camera</Text>
-                      <Text style={styles.optionDescription}>Take a photo of your report</Text>
-                      <Text style={styles.optionSubDescription}>Auto-optimized for OCR</Text>
+                      <Text style={styles.optionDescription}>Take photo of your lab report</Text>
+                      <Text style={styles.optionSubDescription}>Blood tests, health checkups</Text>
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -949,8 +1001,8 @@ export default function UploadReportScreen() {
                     </View>
                     <View style={styles.optionContent}>
                       <Text style={styles.optionTitle}>Gallery</Text>
-                      <Text style={styles.optionDescription}>Choose from your photos</Text>
-                      <Text style={styles.optionSubDescription}>Compressed for processing</Text>
+                      <Text style={styles.optionDescription}>Choose lab report from photos</Text>
+                      <Text style={styles.optionSubDescription}>Test results with values</Text>
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -969,8 +1021,8 @@ export default function UploadReportScreen() {
                     </View>
                     <View style={styles.optionContent}>
                       <Text style={styles.optionTitle}>Files</Text>
-                      <Text style={styles.optionDescription}>Browse PDF and image files</Text>
-                      <Text style={styles.optionSubDescription}>All formats supported</Text>
+                      <Text style={styles.optionDescription}>Browse PDF lab reports</Text>
+                      <Text style={styles.optionSubDescription}>Medical test documents</Text>
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>

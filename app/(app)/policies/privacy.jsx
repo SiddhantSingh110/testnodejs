@@ -32,8 +32,8 @@ export default function PrivacyPolicy() {
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <Text style={styles.lastUpdated}>LAST UPDATED ON</Text>
-          <Text style={styles.updateDate}>5th June 2025</Text>
-          <Text style={styles.heroTitle}>privacy{'\n'}policy</Text>
+          <Text style={styles.updateDate}>16th July 2025</Text>
+          <Text style={styles.heroTitle}>Privacy{'\n'}Policy</Text>
           <Text style={styles.heroSubtitle}>
             this privacy policy includes important information about your personal data and we encourage you to read it carefully.
           </Text>

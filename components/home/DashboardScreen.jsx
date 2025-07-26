@@ -4,9 +4,9 @@ import {
   View, 
   Text, 
   TouchableOpacity, 
-  Image,
   RefreshControl,
-  Animated
+  Animated,
+  Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -18,7 +18,6 @@ import { OrganHealthCard } from './OrganHealthCard';
 import { BodyOverviewSection } from './BodyOverviewSection';
 import { BrandSection } from './BrandSection';
 import { groupMetricsByOrganSystem } from '../../services/OrganSystemGrouping';
-import LetterAvatar from '../shared/LetterAvatar';
 import ENV from '../../config/environment';
 
 export const DashboardScreen = memo(({ 
@@ -30,32 +29,61 @@ export const DashboardScreen = memo(({
   onRefresh, 
   scrollY,
   formatDate,
-  metricsData // Add this to receive full metrics response
+  metricsData
 }) => {
+  // Helper function to get full image URL
   const getFullImageUrl = (relativePath) => {
     if (!relativePath) return null;
     return `${ENV.apiUrl.replace('/api', '')}/storage/${relativePath}`;
   };
 
-  // Smart name display logic (modern app pattern)
-  const getDisplayName = (fullName) => {
+  // Get first name for display
+  const getFirstName = (fullName) => {
     if (!fullName || typeof fullName !== 'string') return 'User';
     
     const trimmedName = fullName.trim();
     const words = trimmedName.split(' ').filter(word => word.length > 0);
     
     if (words.length === 0) return 'User';
-    if (words.length === 1) return words[0];
     
-    // For names like "Dr. John Smith" or "John Michael Smith"
     const firstName = words[0];
     
-    // If first name is too long, truncate it
     if (firstName.length > 12) {
       return firstName.substring(0, 12) + '...';
     }
     
     return firstName;
+  };
+
+  // Get user initial for default avatar
+  const getUserInitial = (name) => {
+    if (!name || typeof name !== 'string') return 'U';
+    return name.charAt(0).toUpperCase();
+  };
+
+  // Render profile avatar
+  const renderProfileAvatar = () => {
+    if (user?.profile_photo) {
+      return (
+        <Image
+          source={{ uri: getFullImageUrl(user.profile_photo) }}
+          style={styles.profileAvatarImage}
+          onError={() => {
+            // If image fails to load, this will be handled by the fallback
+            console.log('Profile image failed to load');
+          }}
+        />
+      );
+    }
+
+    // Default avatar with user initial
+    return (
+      <View style={styles.defaultAvatar}>
+        <Text style={styles.defaultAvatarText}>
+          {getUserInitial(user?.name)}
+        </Text>
+      </View>
+    );
   };
 
   // Process metrics for organ grouping
@@ -73,27 +101,20 @@ export const DashboardScreen = memo(({
       {/* Fixed Header + Body Section */}
       <View style={styles.fixedTopSection}>
         <LinearGradient
-          colors={['#162F65', '#0F2248', '#091429']}
+          colors={['#1A3B7A', '#162F65', '#0F2248']}
           style={styles.gradientBackground}
         >
-          {/* Header */}
+          {/* Simple Header without Card */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Text style={styles.greeting}>Hello,</Text>
-              <Text style={styles.userName}>{getDisplayName(user?.name)}</Text>
+              <Text style={styles.welcomeGreeting}>Welcome {getFirstName(user?.name)}</Text>
+              <Text style={styles.summaryTitle}>SUMMARY</Text>
             </View>
-            <TouchableOpacity onPress={() => router.push('/tabs/profile')} style={styles.avatar}>
-              {user?.profile_photo ? (
-                <Image 
-                  source={{ uri: getFullImageUrl(user.profile_photo) }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <LetterAvatar 
-                  name={user?.name || 'User'} 
-                  size={45}
-                />
-              )}
+            <TouchableOpacity 
+              onPress={() => router.push('/tabs/profile')} 
+              style={styles.profileAvatarContainer}
+            >
+              {renderProfileAvatar()}
             </TouchableOpacity>
           </View>
 

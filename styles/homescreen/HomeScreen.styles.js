@@ -146,16 +146,94 @@ export const styles = StyleSheet.create({
   scrollSpacer: {
     height: Platform.OS === 'android' ? height * 0.4 : height * 0.45,
   },
+
+  // ENHANCED HEADER STYLES
+  enhancedHeader: {
+    marginHorizontal: 16,
+    marginTop: 15,
+    marginBottom: 10,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  headerGradientBackground: {
+    borderRadius: 20,
+    padding: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  welcomeGreeting: {
+    fontSize: 18,
+    color: '#a0c0ff',
+    marginBottom: 8,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+    opacity: 0.9,
+  },
+  summaryTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#38BFA7',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(56, 191, 167, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+
+  // PROFILE AVATAR STYLES
+  profileAvatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    borderWidth: 0,
+    borderColor: 'rgba(56, 191, 167, 0.4)',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  profileAvatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  defaultAvatar: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#38BFA7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  defaultAvatarText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  // LEGACY HEADER STYLES (for backward compatibility)
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 15,
-    paddingBottom: 25,
-  },
-  headerLeft: {
-    flex: 1,
+    paddingTop: 25,
+    paddingBottom: 10,
+    marginTop: 15,
   },
   greeting: {
     fontSize: 18,
@@ -164,15 +242,6 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.5,
     opacity: 0.9,
-  },
-  userName: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: -0.5,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   avatar: {
    borderRadius: 25.5,
@@ -188,6 +257,21 @@ export const styles = StyleSheet.create({
   avatarImage: {
     width: '100%',
     height: '100%',
+  },
+  simpleProfileButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: 'rgba(56, 191, 167, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(56, 191, 167, 0.3)',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 
   // BODY OVERVIEW SECTION STYLES

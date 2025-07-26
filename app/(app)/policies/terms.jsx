@@ -33,7 +33,7 @@ export default function TermsAndConditions() {
         <View style={styles.heroSection}>
           <Text style={styles.lastUpdated}>LAST UPDATED ON</Text>
           <Text style={styles.updateDate}>5th June 2025</Text>
-          <Text style={styles.heroTitle}>terms &{'\n'}conditions</Text>
+          <Text style={styles.heroTitle}>Terms &{'\n'}Conditions</Text>
           <Text style={styles.heroSubtitle}>
             this agreement governs your use of webshark health and we encourage you to read it carefully.
           </Text>

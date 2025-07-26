@@ -32,8 +32,8 @@ export default function SecurityPolicy() {
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <Text style={styles.lastUpdated}>LAST UPDATED ON</Text>
-          <Text style={styles.updateDate}>5th June 2025</Text>
-          <Text style={styles.heroTitle}>security &{'\n'}data protection</Text>
+          <Text style={styles.updateDate}>16th July 2025</Text>
+          <Text style={styles.heroTitle}>Security &{'\n'}Data Protection</Text>
           <Text style={styles.heroSubtitle}>
             comprehensive security measures to protect your medical data and ensure privacy compliance.
           </Text>

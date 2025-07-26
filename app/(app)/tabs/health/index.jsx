@@ -1,4 +1,4 @@
-// app/tabs/health/index.jsx - Enhanced Health Screen
+// app/tabs/health/index.jsx - Fixed version without scroll bars
 import * as SecureStore from 'expo-secure-store';
 import React, { useState, useEffect } from 'react';
 import { 
@@ -239,8 +239,33 @@ export default function HealthMetrics() {
     return metricType?.unit || referenceRanges[metricId]?.unit || '';
   };
 
+  // ✨ Enhanced: Use softer, more professional colors
   const getMetricColor = (metricId) => {
-    return metricTypes.find(m => m.id === metricId)?.color || '#2C7BE5';
+    const metricType = metricTypes.find(m => m.id === metricId);
+    // Use more professional, softer colors
+    const colorMap = {
+      'hdl': '#3B82F6',          // Professional blue
+      'ldl': '#EF4444',          // Softer red
+      'total_cholesterol': '#8B5CF6',  // Professional purple
+      'triglycerides': '#F59E0B',      // Amber
+      'vitamin_d': '#10B981',          // Emerald
+      'vitamin_b12': '#EC4899',        // Pink
+      'folate': '#06B6D4',             // Cyan
+      'iron': '#F97316',               // Orange
+      'ferritin': '#84CC16',           // Lime
+      'hemoglobin': '#DC2626',         // Red
+      'hematocrit': '#7C3AED',         // Violet
+      'glucose_fasting': '#059669',    // Green
+      'hba1c': '#2563EB',              // Blue
+      'creatinine': '#7C2D12',         // Brown
+      'blood_urea_nitrogen': '#1F2937', // Gray
+      'alt': '#B45309',                // Yellow
+      'ast': '#9333EA',                // Purple
+      'tsh': '#BE185D',                // Rose
+      'blood_pressure': '#DC2626',     // Red
+    };
+    
+    return colorMap[metricId] || metricType?.color || '#3B82F6';
   };
 
   const getCurrentMetricValue = () => {
@@ -366,7 +391,7 @@ export default function HealthMetrics() {
         <View style={styles.recentUpdatesHeader}>
           <View style={styles.recentUpdatesHeaderLeft}>
             <View style={styles.recentUpdatesIcon}>
-              <Ionicons name="time-outline" size={20} color="#38BFA7" />
+              <Ionicons name="time-outline" size={20} color="#22C55E" />
             </View>
             <Text style={styles.recentUpdatesTitle}>Recent Health Updates</Text>
           </View>
@@ -374,7 +399,7 @@ export default function HealthMetrics() {
             style={styles.dismissButton}
             onPress={handleDismissTimeline}
           >
-            <Ionicons name="close" size={18} color="#aaa" />
+            <Ionicons name="close" size={18} color="#64748B" />
           </TouchableOpacity>
         </View>
 
@@ -401,7 +426,7 @@ export default function HealthMetrics() {
             style={styles.reviewAllButton}
             onPress={() => handleMarkAsReviewed(reviewableMetrics.map(m => m.id))}
           >
-            <Ionicons name="checkmark-circle-outline" size={16} color="#38BFA7" />
+            <Ionicons name="checkmark-circle-outline" size={16} color="#22C55E" />
             <Text style={styles.reviewAllButtonText}>
               Mark all {reviewableMetrics.length} new metrics as reviewed
             </Text>
@@ -416,18 +441,34 @@ export default function HealthMetrics() {
       <SafeAreaView style={styles.container}>
         {isLoading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#38BFA7" />
+            <ActivityIndicator size="large" color="#3B82F6" />
             <Text style={styles.loaderText}>Loading your health data...</Text>
           </View>
         ) : (
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <ScrollView 
+            style={styles.scrollView} 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            bounces={true}
+            alwaysBounceVertical={false}
+            overScrollMode="never"
+          >
             
             {/* ✨ Recent Updates Section */}
             {renderRecentUpdates()}
             
             {/* Top level category selector */}
             <View style={styles.categorySelector}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+              style={{ flexGrow: 0 }}
+              bounces={false}
+              overScrollMode="never"
+            >
                 {categories.map(category => (
                   <TouchableOpacity
                     key={category.id}
@@ -440,7 +481,7 @@ export default function HealthMetrics() {
                     <Ionicons 
                       name={category.icon} 
                       size={16} 
-                      color={selectedCategory === category.id ? '#fff' : '#aaa'} 
+                      color={selectedCategory === category.id ? '#fff' : '#94A3B8'} 
                     />
                     <Text 
                       style={[
@@ -458,7 +499,15 @@ export default function HealthMetrics() {
             {/* Subcategory selector (shown only for organs) */}
             {selectedCategory === 'organs' && (
               <View style={styles.subCategorySelector}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16 }}
+                  style={{ flexGrow: 0 }}
+                  bounces={false}
+                  overScrollMode="never"
+                >
                   {organCategories.map(organ => (
                     <TouchableOpacity
                       key={organ.id}
@@ -488,21 +537,32 @@ export default function HealthMetrics() {
             
             {/* Metric selector */}
             <View style={styles.metricSelector}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+              style={{ flexGrow: 0 }}
+              bounces={false}
+              overScrollMode="never"
+            >
                 {getFilteredMetrics().map(metric => (
                   <TouchableOpacity
                     key={metric.id}
                     style={[
                       styles.metricTypeButton,
                       selectedMetric === metric.id && { 
-                        backgroundColor: `${metric.color}20`, 
-                        borderColor: metric.color 
+                        backgroundColor: `${getMetricColor(metric.id)}20`, 
+                        borderColor: getMetricColor(metric.id)
                       }
                     ]}
                     onPress={() => setSelectedMetric(metric.id)}
                   >
-                    <Ionicons name={metric.icon} size={20} color={metric.color} />
-                    <Text style={[styles.metricTypeText, selectedMetric === metric.id && { color: metric.color }]}>
+                    <Ionicons name={metric.icon} size={20} color={getMetricColor(metric.id)} />
+                    <Text style={[
+                      styles.metricTypeText, 
+                      selectedMetric === metric.id && { color: getMetricColor(metric.id) }
+                    ]}>
                       {metric.name}
                     </Text>
                   </TouchableOpacity>
@@ -510,11 +570,8 @@ export default function HealthMetrics() {
               </ScrollView>
             </View>
             
-            {/* Current Value Card */}
-            <LinearGradient
-              colors={[`${getMetricColor(selectedMetric)}30`, `${getMetricColor(selectedMetric)}10`]}
-              style={styles.currentValueCard}
-            >
+            {/* Current Value Card - Enhanced with subtle gradient background */}
+            <View style={styles.currentValueCard}>
               <View style={styles.currentValueHeader}>
                 <Text style={styles.currentValueLabel}>Current Value</Text>
                 <View style={styles.headerActions}>
@@ -612,7 +669,7 @@ export default function HealthMetrics() {
                       <Ionicons 
                         name={metricsData[selectedMetric][0].source === 'report' ? 'document-text-outline' : 'create-outline'} 
                         size={12} 
-                        color="#aaa" 
+                        color="#94A3B8" 
                       />
                       <Text style={styles.measurementSource}>
                         {metricsData[selectedMetric][0].source_display || 'Manual Entry'}
@@ -673,15 +730,15 @@ export default function HealthMetrics() {
                   <Text style={styles.addButtonText}>Add Measurement</Text>
                 </TouchableOpacity>
                 
-                <TouchableOpacity 
+                {/*<TouchableOpacity 
                   style={[styles.goalButton, { borderColor: getMetricColor(selectedMetric) }]}
                   onPress={handleSetGoal}
                 >
                   <Ionicons name="flag-outline" size={16} color={getMetricColor(selectedMetric)} />
                   <Text style={[styles.goalButtonText, { color: getMetricColor(selectedMetric) }]}>Set Goal</Text>
-                </TouchableOpacity>
+                </TouchableOpacity>*/}
               </View>
-            </LinearGradient>
+            </View>
             
             {/* Relevant Insights */}
             {getRelevantInsights().length > 0 && (
@@ -698,9 +755,9 @@ export default function HealthMetrics() {
                     ]}
                   >
                     <View style={styles.insightHeader}>
-                      {insight.severity === 'warning' && <Ionicons name="warning-outline" size={20} color="#FFC107" />}
-                      {insight.severity === 'attention' && <Ionicons name="alert-circle-outline" size={20} color="#F44336" />}
-                      {insight.severity === 'positive' && <Ionicons name="checkmark-circle-outline" size={20} color="#4CAF50" />}
+                      {insight.severity === 'warning' && <Ionicons name="warning-outline" size={20} color="#F59E0B" />}
+                      {insight.severity === 'attention' && <Ionicons name="alert-circle-outline" size={20} color="#EF4444" />}
+                      {insight.severity === 'positive' && <Ionicons name="checkmark-circle-outline" size={20} color="#22C55E" />}
                       <Text style={styles.insightTitle}>{insight.title}</Text>
                     </View>
                     <Text style={styles.insightDescription}>{insight.description}</Text>
@@ -785,7 +842,7 @@ export default function HealthMetrics() {
                 </>
               ) : (
                 <View style={styles.noChartDataContainer}>
-                  <Ionicons name="analytics-outline" size={40} color="#555" />
+                  <Ionicons name="analytics-outline" size={40} color="#475569" />
                   <Text style={styles.noChartDataText}>Not enough data to show trend</Text>
                   <Text style={styles.noChartDataSubtext}>Add measurements to see your trends over time</Text>
                 </View>
@@ -798,7 +855,7 @@ export default function HealthMetrics() {
                 <Text style={styles.historyTitle}>History</Text>
                 
                 <TouchableOpacity style={styles.filterButton}>
-                  <Ionicons name="filter-outline" size={18} color="#aaa" />
+                  <Ionicons name="filter-outline" size={18} color="#94A3B8" />
                   <Text style={styles.filterButtonText}>Filter</Text>
                 </TouchableOpacity>
               </View>
@@ -813,7 +870,7 @@ export default function HealthMetrics() {
                           <Ionicons 
                             name={item.source === 'report' ? 'document-text-outline' : 'create-outline'} 
                             size={12} 
-                            color="#aaa" 
+                            color="#94A3B8" 
                           />
                           <Text style={styles.historySourceText}>
                             {item.source_display || (item.source === 'report' ? 'Medical Report' : 'Manual Entry')}

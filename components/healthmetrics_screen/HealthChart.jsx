@@ -1,4 +1,4 @@
-// app/tabs/health/components/HealthChart.jsx
+// app/tabs/health/components/HealthChart.jsx - Enhanced with improved colors
 import React from 'react';
 import { View, Text } from 'react-native';
 import Svg, { 
@@ -67,7 +67,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
   if (!data || data.length < 2) {
     return (
       <View style={[styles.chartPlaceholder, { height, backgroundColor: color + '10' }]}>
-        <Text style={{ color: '#aaa' }}>Not enough data for visualization</Text>
+        <Text style={{ color: '#94A3B8' }}>Not enough data for visualization</Text>
       </View>
     );
   }
@@ -87,7 +87,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
   if (values.length === 0) {
     return (
       <View style={[styles.chartPlaceholder, { height, backgroundColor: color + '10' }]}>
-        <Text style={{ color: '#aaa' }}>No valid data points to display</Text>
+        <Text style={{ color: '#94A3B8' }}>No valid data points to display</Text>
       </View>
     );
   }
@@ -123,19 +123,19 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
   if (!isValidNumber(minValue) || !isValidNumber(maxValue) || minValue === maxValue) {
     return (
       <View style={[styles.chartPlaceholder, { height, backgroundColor: color + '10' }]}>
-        <Text style={{ color: '#aaa' }}>Unable to calculate chart range</Text>
+        <Text style={{ color: '#94A3B8' }}>Unable to calculate chart range</Text>
       </View>
     );
   }
   
-  // Determine reference lines with safety checks
+  // Determine reference lines with safety checks - improved colors
   const refLines = [];
   if (referenceRanges) {
     if (isValidNumber(referenceRanges.min)) {
-      refLines.push({ value: referenceRanges.min, label: 'Min', color: '#FFC107' });
+      refLines.push({ value: referenceRanges.min, label: 'Min', color: '#F59E0B' }); // Softer amber
     }
     if (isValidNumber(referenceRanges.max)) {
-      refLines.push({ value: referenceRanges.max, label: 'Max', color: '#FFC107' });
+      refLines.push({ value: referenceRanges.max, label: 'Max', color: '#F59E0B' }); // Softer amber
     }
   }
   
@@ -174,7 +174,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
   return (
     <View style={[styles.chartContainer, { height }]}>
       <Svg width={width} height={height}>
-        {/* Reference area - only render if both min and max are valid */}
+        {/* Reference area - only render if both min and max are valid - improved colors */}
         {referenceRanges && 
          isValidNumber(referenceRanges.min) && 
          isValidNumber(referenceRanges.max) && (
@@ -187,7 +187,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
                 H ${20}
                 Z
               `}
-              fill={color + '30'}
+              fill={color + '15'} 
               stroke="none"
             />
           </G>
@@ -232,7 +232,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
           />
         )}
           
-        {/* Data points - only render valid ones */}
+        {/* Data points - only render valid ones - improved colors */}
         {dataPoints.map((point, index) => {
           const pointValue = typeof point.value === 'string' && point.value.includes('/') 
             ? safeParseFloat(point.value.split('/')[0])
@@ -252,11 +252,11 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
                 cy={cy}
                 r={4}
                 fill={
-                  point.status === 'high' ? '#F44336' :
-                  point.status === 'borderline' ? '#FFC107' : 
+                  point.status === 'high' ? '#EF4444' :      // Softer red
+                  point.status === 'borderline' ? '#F59E0B' : // Softer amber
                   color
                 }
-                stroke="#fff"
+                stroke="#E2E8F0"  // Softer white
                 strokeWidth={1.5}
               />
               {/* Source indicator */}
@@ -266,7 +266,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
                   cy={cy}
                   r={8}
                   fill="none"
-                  stroke={point.status === 'high' ? '#F44336' : point.status === 'borderline' ? '#FFC107' : color}
+                  stroke={point.status === 'high' ? '#EF4444' : point.status === 'borderline' ? '#F59E0B' : color}
                   strokeWidth={1}
                   strokeDasharray="2,2"
                 />
@@ -275,7 +275,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
           );
         })}
         
-        {/* X-axis labels (dates) - using formatted dates */}
+        {/* X-axis labels (dates) - using formatted dates - improved colors */}
         {dataPoints.filter((_, i) => i % 2 === 0).map((point, index) => {
           const x = 20 + (sortedData.indexOf(point) * ((width - 40) / Math.max(sortedData.length - 1, 1)));
           if (!isValidNumber(x)) return null;
@@ -285,7 +285,7 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
               key={index}
               x={x}
               y={height - 5}
-              fill="#aaa"
+              fill="#94A3B8" // Softer gray
               fontSize={8}
               textAnchor="middle"
             >
@@ -294,20 +294,20 @@ const LineChart = ({ data, referenceRanges, color, timeframe, height = 200, widt
           );
         })}
         
-        {/* Y-axis min/max - only render if values are valid */}
+        {/* Y-axis min/max - only render if values are valid - improved colors */}
         {isValidNumber(maxValue) && (
-          <SvgText x={15} y={15} fill="#aaa" fontSize={8} textAnchor="start">
+          <SvgText x={15} y={15} fill="#94A3B8" fontSize={8} textAnchor="start">
             {maxValue.toFixed(1)}
           </SvgText>
         )}
         {isValidNumber(minValue) && (
-          <SvgText x={15} y={height - 25} fill="#aaa" fontSize={8} textAnchor="start">
+          <SvgText x={15} y={height - 25} fill="#94A3B8" fontSize={8} textAnchor="start">
             {minValue.toFixed(1)}
           </SvgText>
         )}
       </Svg>
       
-      <Text style={{ color: '#aaa', fontSize: 10, textAlign: 'center', marginTop: 5 }}>
+      <Text style={{ color: '#94A3B8', fontSize: 10, textAlign: 'center', marginTop: 5 }}>
         {timeframe === 'week' ? 'Last 7 days' : timeframe === 'month' ? 'Last 30 days' : 'Last 12 months'}
       </Text>
     </View>

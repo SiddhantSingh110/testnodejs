@@ -15,15 +15,44 @@ export function AuthProvider({ children }) {
     async function loadStoredData() {
       try {
         const storedToken = await SecureStore.getItemAsync('userToken');
+        const storedUser = await SecureStore.getItemAsync('userData');
+        
         if (storedToken) {
           setToken(storedToken);
           
-          // Fetch current user data
-          const userData = await fetchPatientProfile(storedToken);
-          setUser(userData.user || userData);
+          // First, set stored user data if available
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              setUser(parsedUser);
+            } catch (parseError) {
+              console.error('Failed to parse stored user data:', parseError);
+            }
+          }
+          
+          // Then try to fetch fresh user data from server
+          try {
+            const userData = await fetchPatientProfile(storedToken);
+            const userToStore = userData.user || userData;
+            setUser(userToStore);
+            
+            // Update stored user data with fresh data
+            await SecureStore.setItemAsync('userData', JSON.stringify(userToStore));
+          } catch (fetchError) {
+            console.error('Failed to fetch fresh user data:', fetchError);
+            // If stored user data exists, we continue with it
+            // If not, we'll fall back to login
+            if (!storedUser) {
+              setToken(null);
+              setUser(null);
+            }
+          }
         }
       } catch (error) {
-        console.error('Failed to load authentication data', error);
+        console.error('Failed to load authentication data:', error);
+        // Clear potentially corrupted data
+        await SecureStore.deleteItemAsync('userToken');
+        await SecureStore.deleteItemAsync('userData');
       } finally {
         setLoading(false);
       }
@@ -31,6 +60,12 @@ export function AuthProvider({ children }) {
     
     loadStoredData();
   }, []);
+
+  // Helper function to store both token and user data
+  const storeAuthData = async (token, userData) => {
+    await SecureStore.setItemAsync('userToken', token);
+    await SecureStore.setItemAsync('userData', JSON.stringify(userData));
+  };
 
   // 🚀 NEW: Unified OTP Authentication Functions
 
@@ -49,8 +84,8 @@ export function AuthProvider({ children }) {
       const response = await verifyOtp(otpData);
       
       if (response.success && response.token) {
-        // Store token
-        await SecureStore.setItemAsync('userToken', response.token);
+        // Store both token and user data
+        await storeAuthData(response.token, response.user);
         
         // Update state
         setToken(response.token);
@@ -81,8 +116,9 @@ export function AuthProvider({ children }) {
       const response = await completeProfile(profileData, token);
       
       if (response.success) {
-        // Update user state with completed profile
+        // Update both state and storage with completed profile
         setUser(response.user);
+        await SecureStore.setItemAsync('userData', JSON.stringify(response.user));
         return response;
       }
       
@@ -99,8 +135,8 @@ export function AuthProvider({ children }) {
     try {
       const response = await loginPatient(phone, password);
       
-      // Store token
-      await SecureStore.setItemAsync('userToken', response.token);
+      // Store both token and user data
+      await storeAuthData(response.token, response.user);
       
       // Update state
       setToken(response.token);
@@ -117,8 +153,8 @@ export function AuthProvider({ children }) {
     try {
       const response = await registerPatient(userData);
       
-      // Store token
-      await SecureStore.setItemAsync('userToken', response.token);
+      // Store both token and user data
+      await storeAuthData(response.token, response.user);
       
       // Update state
       setToken(response.token);
@@ -133,8 +169,9 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     try {
-      // Remove token from storage
+      // Remove both token and user data from storage
       await SecureStore.deleteItemAsync('userToken');
+      await SecureStore.deleteItemAsync('userData');
       
       // Clear state
       setToken(null);
@@ -145,10 +182,15 @@ export function AuthProvider({ children }) {
   };
   
   // Function to update user info in context
-  const updateUserInfo = (updatedUser) => {
+  const updateUserInfo = async (updatedUser) => {
     console.log('Updating user info in context:', updatedUser);
-    // Ensure we maintain the structure expected by the app
+    // Update both state and storage
     setUser(updatedUser);
+    try {
+      await SecureStore.setItemAsync('userData', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Failed to store updated user data:', error);
+    }
   };
 
   // Function to refresh user profile from the server
@@ -158,7 +200,11 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       const userData = await fetchPatientProfile(token);
-      setUser(userData.user || userData);
+      const userToStore = userData.user || userData;
+      setUser(userToStore);
+      
+      // Update stored user data
+      await SecureStore.setItemAsync('userData', JSON.stringify(userToStore));
       return true;
     } catch (error) {
       console.error('Failed to refresh user profile', error);

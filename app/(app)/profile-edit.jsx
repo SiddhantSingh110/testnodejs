@@ -1,6 +1,6 @@
 // app/(app)/profile-edit.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Platform, Image, Modal, ActivityIndicator, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Platform, Image, Modal, ActivityIndicator, StyleSheet, KeyboardAvoidingView, Linking, AppState } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,54 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import ENV from '../../config/environment';
+
+// Helper function to format date to YYYY-MM-DD without timezone issues
+const formatDateToYMDLocal = (date) => {
+  if (!date) return '';
+  
+  try {
+    // Handle both Date objects and date strings
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) return '';
+    
+    // Use local date methods to avoid timezone conversion
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.warn('Error formatting date to YMD:', error);
+    return '';
+  }
+};
+
+// Helper function to format date from database to YYYY-MM-DD
+const formatDateToYMD = (dateString) => {
+  if (!dateString) return '';
+  
+  try {
+    // Clean the date string - remove any extra time components or formatting
+    let cleanDateString = dateString.toString().trim();
+    
+    // Handle various formats that might come from DB
+    if (cleanDateString.includes('T')) {
+      cleanDateString = cleanDateString.split('T')[0];
+    }
+    
+    // Remove any extra time components like :00:00:00:00
+    cleanDateString = cleanDateString.replace(/:00:00:00:00$/, '');
+    
+    const date = new Date(cleanDateString);
+    if (!isNaN(date.getTime())) {
+      return formatDateToYMDLocal(date);
+    }
+    return '';
+  } catch (error) {
+    console.warn('Error formatting date from DB:', dateString, error);
+    return '';
+  }
+};
 
 export default function EditProfile() {
   const { token, updateUserInfo, refreshUserProfile } = useAuth();
@@ -55,6 +103,51 @@ export default function EditProfile() {
     return `${ENV.apiUrl.replace('/api', '')}/storage/${relativePath}`;
   };
 
+  // Helper function to format date for display (DD-MMM-YYYY)
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return null;
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return null;
+      
+      const options = { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric' 
+      };
+      return date.toLocaleDateString('en-GB', options);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Helper function to parse date from various formats
+  const parseDateFromDatabase = (dateString) => {
+    if (!dateString) return null;
+    
+    try {
+      // Handle ISO datetime format (YYYY-MM-DDTHH:mm:ss.sssZ)
+      if (dateString.includes('T')) {
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+      
+      // Handle YYYY-MM-DD format
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Error parsing date:', dateString, error);
+      return null;
+    }
+  };
+
   // Load profile data only once when component mounts
   const loadProfile = useCallback(async () => {
     if (!token) return;
@@ -74,7 +167,7 @@ export default function EditProfile() {
         name: profileData.name || '',
         email: profileData.email || '',
         gender: profileData.gender ? profileData.gender.charAt(0).toUpperCase() + profileData.gender.slice(1) : '',
-        dob: profileData.dob || '',
+        dob: formatDateToYMD(profileData.dob) || '', // Format date properly for form
         height: profileData.height ? String(profileData.height) : '',
         weight: profileData.weight ? String(profileData.weight) : '',
         blood_group: profileData.blood_group || '',
@@ -82,17 +175,15 @@ export default function EditProfile() {
         profile_photo: profileData.profile_photo || ''
       });
       
+      // Handle date parsing for the date picker
       if (profileData.dob) {
-        try {
-          const dateObj = new Date(profileData.dob);
-          if (!isNaN(dateObj.getTime())) {
-            setSelectedDate(dateObj);
-          }
-        } catch (error) {
-          console.warn('Invalid date format:', profileData.dob);
+        const parsedDate = parseDateFromDatabase(profileData.dob);
+        if (parsedDate) {
+          setSelectedDate(parsedDate);
         }
       }
       
+      // Set image if profile photo exists
       if (profileData.profile_photo) {
         const fullImageUrl = getFullImageUrl(profileData.profile_photo);
         setImage(fullImageUrl);
@@ -108,26 +199,59 @@ export default function EditProfile() {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+  
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App became active again (returned from Settings)
+        console.log('App became active - user returned from Settings');
+      }
+    };
+  
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+  
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
 
   const pickImage = async () => {
     try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      // First check current permission status
+      const { status: currentStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
       
-      if (!permission.granted) {
+      let finalStatus = currentStatus;
+      
+      // If permission not granted, request it
+      if (currentStatus !== 'granted') {
+        const { status: requestedStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        finalStatus = requestedStatus;
+      }
+      
+      // Handle permission denial gracefully
+      if (finalStatus !== 'granted') {
         Alert.alert(
-          "Permission needed", 
-          "We need access to your photos to update your profile picture.", 
+          "Permission Required", 
+          "We need access to your photo library to update your profile picture.", 
           [
             { text: "Cancel", style: "cancel" },
             { 
               text: "Open Settings", 
-              onPress: () => Linking.openSettings(),
+              onPress: () => {
+                // Use proper iOS Settings URL
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('app-settings:');
+                } else {
+                  Linking.openSettings();
+                }
+              }
             }
           ]
         );
         return;
       }
   
+      // Launch image picker with proper error handling
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'Images',
         allowsEditing: true,
@@ -136,7 +260,7 @@ export default function EditProfile() {
         maxWidth: 500,
         maxHeight: 500,
       });
-  
+
       if (!result.canceled && result.assets && result.assets[0]) {
         try {
           const imgUri = result.assets[0].uri;
@@ -153,11 +277,13 @@ export default function EditProfile() {
           
           setImage(imgUri);
         } catch (error) {
+          console.error('Image processing error:', error);
           Alert.alert("Error", "Failed to process the selected image. Please try another one.");
         }
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to access your photos. Please check your permissions and try again.");
+      console.error('Permission/ImagePicker error:', error);
+      Alert.alert("Error", "Failed to access your photos. Please try again.");
     }
   };
 
@@ -170,7 +296,8 @@ export default function EditProfile() {
     
     if (date) {
       setSelectedDate(currentDate);
-      const formattedDate = currentDate.toISOString().split('T')[0];
+      // Use the local formatting function to avoid timezone issues
+      const formattedDate = formatDateToYMDLocal(currentDate);
       setForm(prev => ({...prev, dob: formattedDate}));
     }
   };
@@ -206,7 +333,7 @@ export default function EditProfile() {
   const handleSave = async () => {
     if (!validateForm()) {
         const errorMessage = Object.values(formErrors).join('\n');
-        Alert.alert('Validation Error', errorMessage);
+        Alert.alert('Kindly fill all mandatory fields', errorMessage);
         return;
     }
     
@@ -218,7 +345,11 @@ export default function EditProfile() {
         if (form.name) formData.append('name', form.name.trim());
         if (form.email) formData.append('email', form.email.trim());
         if (form.gender) formData.append('gender', form.gender.toLowerCase());
-        if (form.dob) formData.append('dob', form.dob);
+        if (form.dob) {
+          // Ensure we're sending the date in YYYY-MM-DD format
+          const dateToSend = formatDateToYMD(form.dob) || form.dob;
+          formData.append('dob', dateToSend);
+        }
         if (form.height) formData.append('height', form.height);
         if (form.weight) formData.append('weight', form.weight);
         if (form.blood_group) formData.append('blood_group', form.blood_group);
@@ -270,10 +401,16 @@ export default function EditProfile() {
         const response = await updatePatientProfile(formData, token);
         
         if (response && response.user) {
+          // Force a complete refresh of the user context
           if (typeof updateUserInfo === 'function') {
             updateUserInfo(response.user);
           }
+          // Also refresh the profile to ensure data consistency
+          if (typeof refreshUserProfile === 'function') {
+            await refreshUserProfile();
+          }
         } else {
+          // Fallback: refresh from server
           if (typeof refreshUserProfile === 'function') {
             await refreshUserProfile();
           }
@@ -607,7 +744,7 @@ export default function EditProfile() {
               >
                 <Ionicons name="calendar-outline" size={20} color="#a0c0ff" style={styles.inputIcon} />
                 <Text style={[styles.pickerText, !form.dob && styles.placeholderText]}>
-                  {form.dob || 'Select date of birth'}
+                  {formatDateForDisplay(form.dob) || 'Select date of birth'}
                 </Text>
                 <Ionicons name="chevron-down" size={20} color="#a0c0ff" style={styles.chevronIcon} />
               </TouchableOpacity>
@@ -750,11 +887,12 @@ export default function EditProfile() {
                   <TouchableOpacity 
                     style={styles.dateConfirmButton}
                     onPress={() => {
-                      setForm(prev => ({...prev, dob: selectedDate.toISOString().split('T')[0]}));
+                      // Use the local formatting function to avoid timezone issues
+                      const formattedDate = formatDateToYMDLocal(selectedDate);
+                      setForm(prev => ({...prev, dob: formattedDate}));
                       setShowDatePicker(false);
                     }}
-                    activeOpacity={0.8}
-                  >
+                    activeOpacity={0.8}>
                     <Text style={styles.dateConfirmButtonText}>Confirm</Text>
                   </TouchableOpacity>
                 </LinearGradient>

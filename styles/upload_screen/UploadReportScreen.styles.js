@@ -237,25 +237,46 @@ export const styles = StyleSheet.create({
     
     helpTextContainer: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      backgroundColor: 'rgba(160, 192, 255, 0.08)',
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
       padding: 16,
-      borderRadius: 16,
+      borderRadius: 12,
       marginTop: 20,
+      marginBottom: 30,
       borderWidth: 1,
       borderColor: 'rgba(160, 192, 255, 0.15)',
+      alignItems: 'flex-start',
     },
+    
     helpIcon: {
       marginRight: 12,
       marginTop: 2,
     },
-    helpText: {
+    helpTextContent: {
       flex: 1,
+    },
+    
+    helpText: {
       color: '#a0c0ff',
       fontSize: 14,
       lineHeight: 20,
+      marginBottom: 0,
     },
     
+    comingSoonContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(160, 192, 255, 0.1)',
+    },
+    
+    comingSoonText: {
+      color: '#FFC107',
+      fontSize: 12,
+      marginLeft: 6,
+      fontWeight: '500',
+    },
     // Compression Modal Styles
     compressionModalOverlay: {
       flex: 1,
